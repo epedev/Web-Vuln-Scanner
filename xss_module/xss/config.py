@@ -24,6 +24,9 @@ class XSSConfig:
     enable_stored_xss: bool = False
     enable_browser_verification: bool = False
     enable_metachar_probes: bool = False
+    # Extra curated probes adapted from payload-box/xss-payload-list (opt-in).
+    enable_extended_probes: bool = False
+    max_extended_probes: int = 2
 
     # Reliability
     timeout: float = 10.0
@@ -57,6 +60,15 @@ class XSSConfig:
         if self.enable_metachar_probes and self.marker_only:
             # metachar probes imply leaving pure marker-only mode
             self.marker_only = False
+        if self.enable_extended_probes:
+            if not self.enable_active_verification or not self.enable_metachar_probes:
+                raise ValueError(
+                    "enable_extended_probes requires enable_active_verification "
+                    "and enable_metachar_probes"
+                )
+            self.marker_only = False
+        if self.max_extended_probes < 0:
+            raise ValueError("max_extended_probes must be >= 0")
         if self.timeout <= 0 or self.connect_timeout <= 0:
             raise ValueError("timeouts must be positive")
         if self.max_requests < 1:

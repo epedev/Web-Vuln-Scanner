@@ -46,6 +46,8 @@ def build_config_from_args(args: argparse.Namespace) -> XSSConfig:
         enable_stored_xss=args.enable_stored_xss,
         enable_browser_verification=args.browser_verify,
         enable_metachar_probes=args.metachar_probes,
+        enable_extended_probes=args.extended_probes,
+        max_extended_probes=args.max_extended_probes,
         timeout=args.timeout,
         connect_timeout=args.connect_timeout,
         max_requests=args.max_requests,
@@ -68,6 +70,8 @@ def run_xss_module(
     enable_stored_xss: bool = False,
     enable_browser_verification: bool = False,
     enable_metachar_probes: bool = False,
+    enable_extended_probes: bool = False,
+    max_extended_probes: int = 2,
     timeout: float = 10.0,
     max_requests: int = 200,
     cookies: dict[str, str] | None = None,
@@ -87,6 +91,8 @@ def run_xss_module(
         enable_stored_xss=enable_stored_xss,
         enable_browser_verification=enable_browser_verification,
         enable_metachar_probes=enable_metachar_probes,
+        enable_extended_probes=enable_extended_probes,
+        max_extended_probes=max_extended_probes,
         timeout=timeout,
         max_requests=max_requests,
         cookies=cookies or {},
@@ -154,6 +160,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Send context-sensitive metacharacter probes (requires --active-verify)",
     )
     p.add_argument(
+        "--extended-probes",
+        action="store_true",
+        help=(
+            "Opt-in curated extra probes adapted from payload-box/xss-payload-list "
+            "(requires --active-verify --metachar-probes)"
+        ),
+    )
+    p.add_argument(
+        "--max-extended-probes",
+        type=int,
+        default=2,
+        help="Max extra curated probes per input point (default: 2)",
+    )
+    p.add_argument(
         "--enable-stored-xss",
         action="store_true",
         help="Opt-in stored XSS submit-and-retrieve testing",
@@ -188,6 +208,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.metachar_probes and not args.active_verify:
         print("error: --metachar-probes requires --active-verify", file=sys.stderr)
+        return 2
+    if args.extended_probes and not (args.active_verify and args.metachar_probes):
+        print(
+            "error: --extended-probes requires --active-verify and --metachar-probes",
+            file=sys.stderr,
+        )
         return 2
     if args.browser_verify and not args.active_verify:
         print("error: --browser-verify requires --active-verify", file=sys.stderr)

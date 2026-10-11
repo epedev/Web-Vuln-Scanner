@@ -41,10 +41,16 @@ def playwright_available() -> bool:
         return False
 
 
-def build_execution_probe(token: str) -> str:
-    """Harmless unique execution marker for training targets."""
-    # Sets window.__XSS_SIGNAL__ on error handler — observed in-page only.
-    return f'<img src=x onerror="window.__XSS_SIGNAL__=\'{token}\'">'
+def build_execution_probe(token: str, template_id: str | None = None) -> str:
+    """Harmless unique execution marker for training targets.
+
+    Templates adapted from educational Basic/event-handlers patterns
+    (payload-box/xss-payload-list), using an in-page signal instead of alert().
+    """
+    from xss.payload_catalog import build_catalog_execution_probe
+
+    _probe_id, fragment = build_catalog_execution_probe(token, template_id=template_id)
+    return fragment
 
 
 def verify_url_execution(

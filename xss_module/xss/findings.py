@@ -15,6 +15,7 @@ REFERENCES = [
     "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html",
     "https://portswigger.net/web-security/cross-site-scripting",
     "https://owasp.org/www-project-web-security-testing-guide/",
+    "https://github.com/payload-box/xss-payload-list",
 ]
 
 REMEDIATION = (

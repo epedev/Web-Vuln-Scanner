@@ -8,6 +8,7 @@ from typing import Any
 
 from xss.context_analyzer import RenderContext, context_probe_for
 from xss.markers import Marker
+from xss.payload_catalog import CatalogProbe, primary_probe_for, probes_for_context
 from xss.reflection import ReflectionKind, classify_probe_encoding
 
 logger = logging.getLogger("web_vuln.xss.verify")
@@ -33,10 +34,28 @@ class ProbeResult:
 
 def select_probe(context: RenderContext) -> tuple[str, str] | None:
     """Return (probe_id, probe_string) or None if no safe probe for context."""
+    catalog = primary_probe_for(context)
+    if catalog is not None:
+        return (catalog.probe_id, catalog.fragment)
     probe = context_probe_for(context)
     if probe is None:
         return None
     return (f"probe:{context.value}", probe)
+
+
+def select_extended_probes(
+    context: RenderContext,
+    *,
+    limit: int = 3,
+    include_encoding: bool = True,
+    skip_ids: set[str] | None = None,
+) -> list[CatalogProbe]:
+    """Additional curated probes after the primary breakout check."""
+    skip = skip_ids or set()
+    probes = probes_for_context(
+        context, include_encoding=include_encoding, limit=limit + len(skip)
+    )
+    return [p for p in probes if p.probe_id not in skip][:limit]
 
 
 def evaluate_probe_response(

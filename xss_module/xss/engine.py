@@ -23,7 +23,12 @@ from xss.markers import generate_marker
 from xss.reflection import ReflectionKind, classify_marker_reflection
 from xss.scope import ScopeController, ScopeError
 from xss.stored_xss import StoredXSSEngine
-from xss.verification import evaluate_probe_response, select_probe
+from xss.payload_catalog import catalog_manifest
+from xss.verification import (
+    evaluate_probe_response,
+    select_extended_probes,
+    select_probe,
+)
 
 logger = logging.getLogger("web_vuln.xss")
 
@@ -174,6 +179,8 @@ def run_xss_scan(
         "active_verification": config.enable_active_verification,
         "stored_xss": config.enable_stored_xss,
         "browser_verification": config.enable_browser_verification,
+        "extended_probes": config.enable_extended_probes,
+        "payload_catalog": catalog_manifest(),
         "playwright_available": playwright_available(),
     }
     return result
@@ -304,6 +311,59 @@ def _scan_reflected(
                     if marker.value in probe_resp.text:
                         contexts = analyze_contexts(probe_resp.text, marker.value)
                         resp = probe_resp
+
+                    # Optional curated extended probes (payload-box inspired, budgeted)
+                    if (
+                        config.enable_extended_probes
+                        and config.max_extended_probes > 0
+                        and not metachar_raw
+                    ):
+                        for extra in select_extended_probes(
+                            contexts.primary,
+                            limit=config.max_extended_probes,
+                            include_encoding=True,
+                            skip_ids={probe_id},
+                        ):
+                            extra_value = marker.value + extra.fragment
+                            extra_params = _params_for_point(point, extra_value)
+                            try:
+                                if method == "GET":
+                                    extra_resp = http.request(
+                                        "GET",
+                                        point.url.split("?", 1)[0],
+                                        params=extra_params,
+                                        state_changing=False,
+                                    )
+                                else:
+                                    extra_resp = http.request(
+                                        method,
+                                        point.url,
+                                        data=extra_params,
+                                        state_changing=True,
+                                    )
+                            except RequestBudgetExceeded:
+                                raise
+                            if extra_resp.error:
+                                continue
+                            extra_result = evaluate_probe_response(
+                                extra_resp.text,
+                                marker,
+                                contexts.primary,
+                                extra.probe_id,
+                                extra.fragment,
+                            )
+                            probe_ran = True
+                            probe_kind = extra_result.reflection_kind
+                            probe_id = extra.probe_id
+                            detection_method = "marker_plus_extended_catalog_probe"
+                            if extra_result.metachar_raw:
+                                metachar_raw = True
+                                if marker.value in extra_resp.text:
+                                    contexts = analyze_contexts(
+                                        extra_resp.text, marker.value
+                                    )
+                                    resp = extra_resp
+                                break
 
         # Optional browser confirmation
         if (

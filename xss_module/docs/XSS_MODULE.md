@@ -40,8 +40,19 @@ Primary entry points:
 | Marker-only | default / `--marker-only` | Unique alphanumeric markers; candidates only |
 | Active verify | `--active-verify` | Enables further verification features |
 | Metachar probes | `--metachar-probes` | Context-sensitive breakout probes |
+| Extended probes | `--extended-probes` | Extra curated probes from educational catalog (budgeted) |
 | Stored XSS | `--enable-stored-xss` | Submit marker + fetch `renders_to` pages |
 | Browser verify | `--browser-verify` | Playwright execution signal (optional dep) |
+
+### Educational payload catalog
+
+Context-mapped lab probes in `xss/payload_catalog.py` are adapted from
+[payload-box/xss-payload-list](https://github.com/payload-box/xss-payload-list)
+(Basic event-handlers / script-tags, Context-Guide, encoding notes).
+
+Intentionally **not** imported: All-In-One dumps, Blind/XSS-Hunter callbacks,
+WAF-bypass spraying lists, or cookie-exfiltration demos. Upstream `alert(1)`
+examples are replaced with unique in-page signals or short reflection probes.
 
 ## Finding schema
 
@@ -119,3 +130,4 @@ pytest -q
 - [OWASP XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)
 - [PortSwigger XSS Academy](https://portswigger.net/web-security/cross-site-scripting)
 - [OWASP WSTG](https://owasp.org/www-project-web-security-testing-guide/)
+- [payload-box/xss-payload-list](https://github.com/payload-box/xss-payload-list) (educational probe patterns)

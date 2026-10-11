@@ -25,7 +25,7 @@ python xss_module.py \
   --crawl-map fixtures/sample_crawl_map.json \
   --origin http://127.0.0.1:5001 \
   --allow-loopback \
-  --active-verify --metachar-probes \
+  --active-verify --metachar-probes --extended-probes \
   --enable-stored-xss \
   -o findings.json -v
 
