@@ -6,114 +6,151 @@
   <title>{{ metadata.report_title }} — VulnSight</title>
   <style>
     :root {
-      --bg: #f4f6f8;
-      --card: #ffffff;
-      --ink: #14212b;
-      --muted: #5b6b76;
-      --line: #d7dee5;
-      --brand: #0b3d4a;
-      --accent: #1f7a6c;
-      --critical: #8b1e1e;
-      --high: #c2410c;
+      --bg: #eef3f2;
+      --ink: #0c1b22;
+      --muted: #5b737c;
+      --line: rgba(15, 76, 92, 0.14);
+      --brand: #0f4c5c;
+      --accent: #1faa9a;
+      --amber: #e8a317;
+      --card: rgba(255,255,255,0.88);
     }
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
       color: var(--ink);
-      background: linear-gradient(180deg, #e8eef2 0%, var(--bg) 220px);
-      line-height: 1.5;
+      background:
+        radial-gradient(800px 360px at 0% 0%, rgba(31,170,154,0.14), transparent 55%),
+        radial-gradient(700px 300px at 100% 0%, rgba(232,163,23,0.12), transparent 50%),
+        var(--bg);
+      line-height: 1.55;
     }
-    a { color: var(--accent); }
-    .wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    a { color: var(--brand); }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+    .topnav {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; flex-wrap: wrap; gap: 0.65rem 1rem; align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(10px);
+      background: rgba(238,243,242,0.88);
+      border-bottom: 1px solid var(--line);
+      padding: 0.65rem 0; margin-bottom: 1rem;
+    }
+    .brand {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-weight: 700; letter-spacing: 0.08em; font-size: 0.82rem; color: var(--brand);
+    }
+    .topnav a { text-decoration: none; font-size: 0.88rem; color: var(--muted); }
+    .topnav a:hover { color: var(--brand); }
     header.cover {
-      background: var(--brand);
-      color: #f5fafb;
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #0f4c5c, #0b2f38);
+      color: #f4fbfa;
+      padding: clamp(1.6rem, 4vw, 2.4rem);
+      margin-bottom: 1.25rem;
+      position: relative; overflow: hidden;
     }
-    header.cover h1 { margin: 0 0 0.35rem; font-size: 1.8rem; letter-spacing: 0.02em; }
-    header.cover .product { font-size: 0.95rem; opacity: 0.9; margin-bottom: 1rem; }
-    .meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
-    .meta div { background: rgba(255,255,255,0.08); border-radius: 8px; padding: 0.65rem 0.8rem; }
-    .meta dt { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.8; }
-    .meta dd { margin: 0.15rem 0 0; font-weight: 600; }
+    header.cover::after {
+      content: ""; position: absolute; right: -40px; bottom: -60px;
+      width: 220px; height: 220px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(232,163,23,0.28), transparent 70%);
+    }
+    header.cover .product {
+      font-family: "IBM Plex Mono", monospace; font-size: 0.75rem;
+      letter-spacing: 0.14em; text-transform: uppercase; color: var(--amber);
+      margin-bottom: 0.55rem;
+    }
+    header.cover h1 { margin: 0 0 0.85rem; font-size: clamp(1.5rem, 3.5vw, 2rem); letter-spacing: -0.02em; }
+    .meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.65rem; position: relative; z-index: 1; }
+    .meta div { background: rgba(255,255,255,0.08); padding: 0.65rem 0.8rem; }
+    .meta dt { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.75; }
+    .meta dd { margin: 0.15rem 0 0; font-weight: 650; word-break: break-word; }
     section {
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 1.25rem 1.4rem;
-      margin-bottom: 1.25rem;
+      padding: 1.2rem 1.35rem;
+      margin-bottom: 1.1rem;
     }
-    h2 { margin-top: 0; color: var(--brand); font-size: 1.25rem; }
+    h2 { margin-top: 0; color: var(--brand); font-size: 1.2rem; letter-spacing: -0.01em; }
     h3 { margin-bottom: 0.35rem; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.7rem; }
     .card {
       border: 1px solid var(--line);
-      border-radius: 10px;
       padding: 0.85rem;
       background: #fbfcfd;
+      transition: transform 0.15s ease;
     }
-    .card .num { font-size: 1.6rem; font-weight: 700; color: var(--brand); }
-    .card .lbl { color: var(--muted); font-size: 0.85rem; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    .card:hover { transform: translateY(-2px); }
+    .card .num { font-size: 1.55rem; font-weight: 750; color: var(--brand); font-variant-numeric: tabular-nums; }
+    .card .lbl { color: var(--muted); font-size: 0.82rem; }
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+      margin: 0.85rem 0 1rem;
+    }
+    .chip {
+      border: 1px solid var(--line); background: #fff; color: var(--ink);
+      padding: 0.35rem 0.7rem; font-size: 0.8rem; cursor: pointer;
+    }
+    .chip[aria-pressed="true"] { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .search {
+      flex: 1 1 180px; min-width: 160px;
+      border: 1px solid var(--line); padding: 0.45rem 0.65rem; font: inherit;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
     th, td { border-bottom: 1px solid var(--line); padding: 0.55rem 0.4rem; text-align: left; vertical-align: top; }
-    th { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    th { color: var(--muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    tr.finding-row { cursor: pointer; }
+    tr.finding-row:hover { background: rgba(31,170,154,0.06); }
+    tr.finding-row[hidden] { display: none; }
     .badge {
-      display: inline-block;
-      min-width: 4.2rem;
-      text-align: center;
-      border-radius: 999px;
-      padding: 0.15rem 0.55rem;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #fff;
-      text-transform: uppercase;
+      display: inline-block; min-width: 4.2rem; text-align: center;
+      padding: 0.15rem 0.5rem; font-size: 0.72rem; font-weight: 750; color: #fff;
+      text-transform: uppercase; letter-spacing: 0.03em;
     }
     .sev-critical { background: #8b1e1e; }
     .sev-high { background: #c2410c; }
     .sev-medium { background: #b45309; }
     .sev-low { background: #1d4ed8; }
     .sev-info, .sev-none { background: #475569; }
-    .finding { border-top: 1px solid var(--line); padding-top: 1rem; margin-top: 1rem; }
-    .finding:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
-    .muted { color: var(--muted); }
-    pre, code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 0.85rem;
+    .finding {
+      border: 1px solid var(--line); padding: 1rem; margin-top: 0.85rem;
+      background: #fff; scroll-margin-top: 4rem;
     }
+    .finding[hidden] { display: none; }
+    .muted { color: var(--muted); }
+    pre, code { font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 0.84rem; }
     pre {
-      background: #0f172a;
-      color: #e2e8f0;
-      padding: 0.85rem;
-      border-radius: 8px;
-      overflow-x: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
+      background: #0b1c22; color: #d7ebe7; padding: 0.85rem;
+      overflow-x: auto; white-space: pre-wrap; word-break: break-word;
     }
     ul.compact { margin: 0.4rem 0; padding-left: 1.2rem; }
     .notice {
-      background: #fff7ed;
-      border: 1px solid #fed7aa;
-      color: #9a3412;
-      border-radius: 8px;
-      padding: 0.75rem 0.9rem;
-      margin-bottom: 1rem;
+      background: rgba(232,163,23,0.14); border-left: 4px solid var(--amber);
+      color: #5c4300; padding: 0.75rem 0.9rem; margin-bottom: 1rem;
     }
     footer { color: var(--muted); font-size: 0.85rem; margin-top: 1rem; }
     @media print {
+      .topnav, .toolbar { display: none !important; }
       body { background: #fff; }
-      header.cover { break-inside: avoid; }
-      section { break-inside: avoid; border: 0; padding: 0; margin-bottom: 1.5rem; }
-      a { color: inherit; text-decoration: none; }
+      section, .finding { break-inside: avoid; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
+    <div class="topnav">
+      <div class="brand">VULNSIGHT REPORT</div>
+      <div>
+        <a href="#executive-summary">Summary</a> ·
+        <a href="#findings-overview">Overview</a> ·
+        <a href="#detailed-findings">Details</a> ·
+        <a href="#methodology">Limits</a>
+      </div>
+    </div>
+
     <header class="cover">
-      <div class="product">VulnSight — Intelligent Web Vulnerability Scanner</div>
+      <div class="product">VulnSight · see the weakness · prove the risk</div>
       <h1>{{ metadata.report_title }}</h1>
       <div class="meta">
         <div><dt>Target</dt><dd>{{ metadata.target }}</dd></div>
@@ -176,6 +213,15 @@
 
     <section id="findings-overview">
       <h2>Findings overview</h2>
+      <div class="toolbar" role="toolbar" aria-label="Filter findings">
+        <button type="button" class="chip" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" class="chip" data-filter="critical" aria-pressed="false">Critical</button>
+        <button type="button" class="chip" data-filter="high" aria-pressed="false">High</button>
+        <button type="button" class="chip" data-filter="medium" aria-pressed="false">Medium</button>
+        <button type="button" class="chip" data-filter="low" aria-pressed="false">Low</button>
+        <input class="search" id="find-search" type="search" placeholder="Filter by title, URL, CWE…" aria-label="Search findings">
+      </div>
+      <p class="muted" id="filter-count"></p>
       <table>
         <thead>
           <tr>
@@ -193,7 +239,7 @@
         </thead>
         <tbody>
           {% for f in findings %}
-          <tr>
+          <tr class="finding-row" data-severity="{{ f.severity }}" data-search="{{ (f.title ~ ' ' ~ f.url ~ ' ' ~ (f.cwe or '') ~ ' ' ~ (f.owasp or '') ~ ' ' ~ f.source_module)|lower }}" data-target="finding-{{ f.id }}">
             <td><a href="#finding-{{ f.id }}">{{ f.id[:8] }}</a></td>
             <td>{{ f.title }}</td>
             <td><span class="badge sev-{{ f.severity }}">{{ f.severity }}</span></td>
@@ -215,7 +261,7 @@
     <section id="detailed-findings">
       <h2>Detailed findings</h2>
       {% for f in findings %}
-      <article class="finding" id="finding-{{ f.id }}">
+      <article class="finding" id="finding-{{ f.id }}" data-severity="{{ f.severity }}" data-search="{{ (f.title ~ ' ' ~ f.url ~ ' ' ~ (f.cwe or '') ~ ' ' ~ (f.owasp or '') ~ ' ' ~ f.source_module)|lower }}">
         <h3>{{ f.title }}</h3>
         <p>
           <span class="badge sev-{{ f.severity }}">{{ f.severity }}</span>
@@ -281,8 +327,54 @@
     </section>
 
     <footer>
-      Generated by VulnSight reporting module · timestamps in UTC · treat all evidence as untrusted data.
+      Generated by VulnSight · timestamps in UTC · treat all evidence as untrusted data.
     </footer>
   </div>
+  <script>
+    (function () {
+      const chips = [...document.querySelectorAll('.chip')];
+      const search = document.getElementById('find-search');
+      const rows = [...document.querySelectorAll('tr.finding-row')];
+      const details = [...document.querySelectorAll('article.finding')];
+      const countEl = document.getElementById('filter-count');
+      let severity = 'all';
+
+      function apply() {
+        const q = (search.value || '').trim().toLowerCase();
+        let visible = 0;
+        rows.forEach((row) => {
+          const sevOk = severity === 'all' || row.dataset.severity === severity;
+          const textOk = !q || (row.dataset.search || '').includes(q);
+          const show = sevOk && textOk;
+          row.hidden = !show;
+          if (show) visible += 1;
+        });
+        details.forEach((el) => {
+          const sevOk = severity === 'all' || el.dataset.severity === severity;
+          const textOk = !q || (el.dataset.search || '').includes(q);
+          el.hidden = !(sevOk && textOk);
+        });
+        if (countEl) countEl.textContent = visible + ' finding(s) visible';
+      }
+
+      chips.forEach((chip) => {
+        chip.addEventListener('click', () => {
+          severity = chip.dataset.filter;
+          chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+          apply();
+        });
+      });
+      if (search) search.addEventListener('input', apply);
+      rows.forEach((row) => {
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('a')) return;
+          const id = row.dataset.target;
+          const el = document.getElementById(id);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+      apply();
+    })();
+  </script>
 </body>
 </html>

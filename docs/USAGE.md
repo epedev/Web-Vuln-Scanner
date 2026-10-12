@@ -38,10 +38,14 @@ Artifacts:
 ```bash
 vulnsight version
 vulnsight doctor
+vulnsight docs                 # open interactive docs/index.html
+vulnsight docs --no-open      # print path/URI only
 vulnsight validate-input --file fixtures/sample_crawl_map.json
 vulnsight scan --target http://127.0.0.1:5001 --output ./reports
 vulnsight report --input ./reports/findings.json --format html --output ./reports
 ```
+
+Interactive HTML reports (`vulnsight_report.html`) include sticky navigation, severity chips, and client-side search.
 
 Useful `scan` flags:
 

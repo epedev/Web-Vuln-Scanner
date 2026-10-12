@@ -34,6 +34,25 @@ def _cmd_version(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_docs(args: argparse.Namespace) -> int:
+    """Open the interactive docs landing page in a browser."""
+    import webbrowser
+
+    ui = _console(args)
+    path = (REPO_ROOT / "docs" / "index.html").resolve()
+    if not path.is_file():
+        ui.status_fail(f"docs landing page missing: {path}")
+        return 1
+    uri = path.as_uri()
+    ui.banner(subtitle="interactive documentation")
+    ui.status_ok(f"opening {path}")
+    if not args.no_open:
+        webbrowser.open(uri)
+    ui.status_info(uri)
+    ui.print()
+    return 0
+
+
 def _cmd_doctor(args: argparse.Namespace) -> int:
     ui = _console(args)
     ensure_module_paths()
@@ -323,6 +342,18 @@ def build_parser() -> argparse.ArgumentParser:
 
     v = sub.add_parser("version", parents=[color_parent], help="Print scanner version")
     v.set_defaults(func=_cmd_version)
+
+    docs = sub.add_parser(
+        "docs",
+        parents=[color_parent],
+        help="Open the interactive VulnSight documentation landing page",
+    )
+    docs.add_argument(
+        "--no-open",
+        action="store_true",
+        help="Print the docs path/URI without launching a browser",
+    )
+    docs.set_defaults(func=_cmd_docs)
 
     d = sub.add_parser(
         "doctor", parents=[color_parent], help="Check environment and lab readiness"

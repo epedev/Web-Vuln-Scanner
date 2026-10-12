@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.5 — Interactive docs + polished report UI
+
+- Add interactive `docs/index.html` showcase with command recipes
+- Add `vulnsight docs` to open the landing page
+- Upgrade HTML reports with sticky nav, severity chips, and search filtering
+- Refresh README visual presentation
+
 ## 0.1.4 — No bundled vulnerable target
 
 - Remove `target_app/` and mock XSS fixture apps from the repository

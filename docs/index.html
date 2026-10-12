@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VulnSight — See the weakness. Prove the risk.</title>
+  <style>
+    :root {
+      --ink: #0c1b22;
+      --paper: #f3f7f6;
+      --teal: #0f4c5c;
+      --teal-bright: #1faa9a;
+      --amber: #e8a317;
+      --line: rgba(15, 76, 92, 0.14);
+      --shadow: 0 18px 50px rgba(12, 27, 34, 0.12);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(900px 420px at 10% -10%, rgba(31, 170, 154, 0.18), transparent 55%),
+        radial-gradient(700px 380px at 90% 0%, rgba(232, 163, 23, 0.16), transparent 50%),
+        linear-gradient(180deg, #e7f0ee 0%, var(--paper) 40%, #eef3f2 100%);
+      min-height: 100vh;
+      line-height: 1.55;
+    }
+    a { color: var(--teal); text-decoration: none; }
+    a:hover { color: var(--teal-bright); }
+    .shell { max-width: 1080px; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; }
+    .nav {
+      display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem;
+      align-items: center; justify-content: space-between;
+      padding: 0.75rem 0 1.5rem;
+    }
+    .brand {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-weight: 700; letter-spacing: 0.08em; font-size: 0.95rem;
+      color: var(--teal);
+    }
+    .nav-links { display: flex; flex-wrap: wrap; gap: 0.9rem; font-size: 0.92rem; }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(135deg, rgba(15, 76, 92, 0.96), rgba(12, 40, 48, 0.94)),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 28px);
+      color: #f4fbfa;
+      padding: clamp(2rem, 5vw, 3.5rem);
+      min-height: min(72vh, 560px);
+      display: flex; flex-direction: column; justify-content: flex-end;
+      box-shadow: var(--shadow);
+    }
+    .hero::before {
+      content: "";
+      position: absolute; inset: auto -10% -40% 40%;
+      width: 420px; height: 420px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(232,163,23,0.28), transparent 65%);
+      animation: drift 10s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    .hero::after {
+      content: "";
+      position: absolute; inset: -20% auto auto -8%;
+      width: 280px; height: 280px; border-radius: 50%;
+      border: 1px solid rgba(31,170,154,0.35);
+      animation: pulse 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes drift { from { transform: translateY(0); } to { transform: translateY(-24px); } }
+    @keyframes pulse { 0%,100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.08); opacity: 0.9; } }
+    .hero-kicker {
+      position: relative; z-index: 1;
+      font-family: "IBM Plex Mono", monospace;
+      text-transform: uppercase; letter-spacing: 0.16em;
+      font-size: 0.72rem; color: var(--amber); margin-bottom: 0.85rem;
+    }
+    .hero h1 {
+      position: relative; z-index: 1;
+      margin: 0;
+      font-size: clamp(2.4rem, 7vw, 4.4rem);
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+      max-width: 12ch;
+    }
+    .hero p {
+      position: relative; z-index: 1;
+      max-width: 34rem; margin: 1rem 0 1.5rem;
+      color: rgba(244,251,250,0.86); font-size: 1.05rem;
+    }
+    .cta-row { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      border: 1px solid transparent; padding: 0.7rem 1.05rem;
+      font-weight: 650; font-size: 0.92rem; cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: var(--amber); color: #1a1200; }
+    .btn-ghost { background: transparent; color: #f4fbfa; border-color: rgba(244,251,250,0.35); }
+    .section { margin-top: 2.5rem; }
+    .section h2 {
+      font-size: 1.35rem; margin: 0 0 0.4rem; color: var(--teal);
+      letter-spacing: -0.02em;
+    }
+    .section .lead { color: #46606a; margin: 0 0 1.2rem; max-width: 46rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.9rem;
+    }
+    .tile {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(6px);
+      padding: 1.1rem 1.15rem;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .tile:hover { border-color: rgba(31,170,154,0.45); transform: translateY(-2px); }
+    .tile h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+    .tile p { margin: 0; color: #4d6670; font-size: 0.92rem; }
+    .tile .tag {
+      display: inline-block; margin-bottom: 0.55rem;
+      font-family: "IBM Plex Mono", monospace; font-size: 0.7rem;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal-bright);
+    }
+    .terminal {
+      border: 1px solid #16333c;
+      background: #0b1c22;
+      color: #d7ebe7;
+      padding: 1rem 1.1rem;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.86rem;
+      box-shadow: var(--shadow);
+      overflow-x: auto;
+    }
+    .terminal .prompt { color: var(--teal-bright); }
+    .terminal .cmd { color: #fff; }
+    .terminal .out { color: var(--amber); }
+    .tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.85rem; }
+    .tab {
+      border: 1px solid var(--line); background: #fff; color: var(--ink);
+      padding: 0.45rem 0.8rem; font-size: 0.85rem; cursor: pointer;
+    }
+    .tab[aria-selected="true"] {
+      background: var(--teal); color: #fff; border-color: var(--teal);
+    }
+    .panel[hidden] { display: none; }
+    .warn {
+      margin-top: 2rem;
+      border-left: 4px solid var(--amber);
+      background: rgba(232,163,23,0.12);
+      padding: 0.9rem 1rem;
+      color: #5c4300;
+    }
+    footer {
+      margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line);
+      color: #5b737c; font-size: 0.88rem;
+      display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: space-between;
+    }
+    @media (max-width: 640px) {
+      .hero { min-height: auto; }
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="shell">
+    <nav class="nav" aria-label="Primary">
+      <div class="brand">VULNSIGHT</div>
+      <div class="nav-links">
+        <a href="#flow">Flow</a>
+        <a href="#modules">Modules</a>
+        <a href="#try">Try it</a>
+        <a href="USAGE.md">Usage</a>
+        <a href="SECURITY.md">Security</a>
+        <a href="https://github.com/epedev/Web-Vuln-Scanner">GitHub</a>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <div class="hero-kicker">authorized web vulnerability scanner</div>
+      <h1>See the weakness.</h1>
+      <p>
+        Modular CLI scanner for authorized local websites — recon, injection, XSS,
+        access control, and report generation in one interactive pipeline.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#try">Start scanning</a>
+        <a class="btn btn-ghost" href="ARCHITECTURE.md">Architecture</a>
+      </div>
+    </header>
+
+    <section class="section" id="flow">
+      <h2>One clear workflow</h2>
+      <p class="lead">Authorize a local target, run every module, open a self-contained HTML report.</p>
+      <div class="grid">
+        <article class="tile">
+          <span class="tag">01</span>
+          <h3>Install</h3>
+          <p><code>pip install -e ".[dev]"</code> then <code>vulnsight doctor</code>.</p>
+        </article>
+        <article class="tile">
+          <span class="tag">02</span>
+          <h3>Authorize</h3>
+          <p><code>vulnsight init-project</code> writes a project JSON with explicit permission.</p>
+        </article>
+        <article class="tile">
+          <span class="tag">03</span>
+          <h3>Scan</h3>
+          <p><code>vulnsight scan --project myproject.json</code> runs all detection modules.</p>
+        </article>
+        <article class="tile">
+          <span class="tag">04</span>
+          <h3>Report</h3>
+          <p>Open <code>reports/vulnsight_report.html</code> — filterable findings + remediations.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="modules">
+      <h2>Five-person modular design</h2>
+      <p class="lead">Each module stays independently testable and integrates through shared finding contracts.</p>
+      <div class="grid">
+        <article class="tile"><span class="tag">Recon</span><h3>Crawler</h3><p>Same-origin crawl map with forms, params, and scope checks.</p></article>
+        <article class="tile"><span class="tag">Inject</span><h3>SQLi / Cmd</h3><p>Bounded local checks with evidence vs noise discipline.</p></article>
+        <article class="tile"><span class="tag">XSS</span><h3>Reflected / Stored</h3><p>Marker-first analysis; confirmation is earned, not assumed.</p></article>
+        <article class="tile"><span class="tag">Access</span><h3>IDOR / BAC</h3><p>Role and object-level authorization boundary probes.</p></article>
+        <article class="tile"><span class="tag">Report</span><h3>CVSS + HTML</h3><p>Canonical schema, conservative dedupe, honest limitations.</p></article>
+      </div>
+    </section>
+
+    <section class="section" id="try">
+      <h2>Interactive command palette</h2>
+      <p class="lead">Click a recipe to preview the exact commands for your terminal.</p>
+      <div class="tabs" role="tablist" aria-label="Command recipes">
+        <button class="tab" role="tab" aria-selected="true" data-panel="install">Install</button>
+        <button class="tab" role="tab" aria-selected="false" data-panel="project">Authorize</button>
+        <button class="tab" role="tab" aria-selected="false" data-panel="scan">Scan</button>
+        <button class="tab" role="tab" aria-selected="false" data-panel="doctor">Doctor</button>
+      </div>
+      <div class="panel" id="panel-install" role="tabpanel">
+        <pre class="terminal" id="term"><span class="prompt">$</span> <span class="cmd">git clone https://github.com/epedev/Web-Vuln-Scanner.git && cd Web-Vuln-Scanner</span>
+<span class="prompt">$</span> <span class="cmd">python3 -m venv .venv && source .venv/bin/activate</span>
+<span class="prompt">$</span> <span class="cmd">pip install -e ".[dev]"</span>
+<span class="out">✔ RESULT: ready — you can run vulnsight scan</span></pre>
+      </div>
+      <div class="panel" id="panel-project" role="tabpanel" hidden>
+        <pre class="terminal"><span class="prompt">$</span> <span class="cmd">vulnsight init-project -o myproject.json --target http://127.0.0.1:5001</span>
+<span class="prompt">$</span> <span class="cmd"># edit authorization.authorized_by</span>
+<span class="out">wrote authorized project file → myproject.json</span></pre>
+      </div>
+      <div class="panel" id="panel-scan" role="tabpanel" hidden>
+        <pre class="terminal"><span class="prompt">$</span> <span class="cmd">vulnsight scan --project myproject.json</span>
+<span class="out">SCAN BRIEF → modules engaged → HTML report written</span>
+<span class="prompt">$</span> <span class="cmd">xdg-open reports/vulnsight_report.html</span></pre>
+      </div>
+      <div class="panel" id="panel-doctor" role="tabpanel" hidden>
+        <pre class="terminal"><span class="prompt">$</span> <span class="cmd">vulnsight doctor</span>
+<span class="out">✔ Python · modules · imports · ready</span></pre>
+      </div>
+      <p style="margin-top:0.85rem">
+        <button class="btn btn-primary" type="button" id="copy-btn">Copy visible commands</button>
+        <span id="copy-status" style="margin-left:0.6rem;color:#5b737c;font-size:0.88rem"></span>
+      </p>
+    </section>
+
+    <div class="warn" role="note">
+      <strong>Authorized use only.</strong> VulnSight does not ship a vulnerable target.
+      Scan only systems you own or have explicit written permission to test.
+    </div>
+
+    <footer>
+      <span>VulnSight · see the weakness · prove the risk · secure the web</span>
+      <span><a href="../LICENSE">MIT License</a> · <a href="https://github.com/epedev/Web-Vuln-Scanner">epedev/Web-Vuln-Scanner</a></span>
+    </footer>
+  </div>
+  <script>
+    const tabs = [...document.querySelectorAll(".tab")];
+    const panels = {
+      install: document.getElementById("panel-install"),
+      project: document.getElementById("panel-project"),
+      scan: document.getElementById("panel-scan"),
+      doctor: document.getElementById("panel-doctor"),
+    };
+    let active = "install";
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        active = tab.dataset.panel;
+        tabs.forEach((t) => t.setAttribute("aria-selected", String(t === tab)));
+        Object.entries(panels).forEach(([key, el]) => {
+          el.hidden = key !== active;
+        });
+      });
+    });
+    document.getElementById("copy-btn").addEventListener("click", async () => {
+      const text = panels[active].innerText;
+      try {
+        await navigator.clipboard.writeText(text);
+        document.getElementById("copy-status").textContent = "Copied.";
+      } catch {
+        document.getElementById("copy-status").textContent = "Select and copy manually.";
+      }
+    });
+  </script>
+</body>
+</html>

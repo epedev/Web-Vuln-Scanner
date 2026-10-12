@@ -20,6 +20,7 @@ python -m pip install -e ".[dev]"
 
 vulnsight --help
 vulnsight doctor
+vulnsight docs   # opens interactive docs/index.html
 ```
 
 ## Windows (PowerShell)

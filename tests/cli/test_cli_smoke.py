@@ -29,3 +29,9 @@ def test_validate_sample_crawl_map():
     )
     assert sample.is_file()
     assert main(["validate-input", "--file", str(sample)]) == 0
+
+
+def test_docs_no_open(capsys):
+    assert main(["docs", "--no-open"]) == 0
+    out = capsys.readouterr().out
+    assert "index.html" in out
