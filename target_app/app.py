@@ -63,6 +63,24 @@ def _reseed_if_needed() -> None:
         init_db()
 
 
+def reset_lab_state() -> dict[str, str]:
+    """Reseed SQLite users and clear in-memory stored-XSS comments."""
+    global COMMENTS
+    COMMENTS = []
+    init_db()
+    return {
+        "status": "ok",
+        "message": "Lab reset: users reseeded, stored comments cleared",
+    }
+
+
+@app.post("/_lab/reset")
+def lab_reset():
+    """Demo helper: restore a clean lab state before a repeat presentation."""
+    result = reset_lab_state()
+    return page("Lab Reset", f"<p>{html.escape(result['message'])}</p>")
+
+
 @app.get("/")
 def home():
     return page(
@@ -76,7 +94,9 @@ def home():
         "<li>IDOR: <a href='/profile/1'>/profile/&lt;id&gt;</a></li>"
         "<li>Broken access control: <a href='/admin'>/admin</a></li>"
         "</ul>"
-        "<p>Secure counterparts: /encoded?q=, /login-secure, /profile-secure/&lt;id&gt;, /admin-secure</p>",
+        "<p>Secure counterparts: /encoded?q=, /login-secure, /profile-secure/&lt;id&gt;, /admin-secure</p>"
+        "<p class='muted'>Reset before a repeat demo: "
+        "<code>curl -X POST http://127.0.0.1:5001/_lab/reset</code></p>",
     )
 
 

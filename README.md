@@ -68,8 +68,10 @@ Focused suites remain available under each module’s `tests/` directory.
 - [Architecture](docs/ARCHITECTURE.md)
 - [Findings schema](docs/FINDINGS_SCHEMA.md)
 - [Vulnerable target](docs/VULNERABLE_TARGET.md)
+- [Graduation demo runbook](docs/DEMO_RUNBOOK.md)
 - [Module guide](docs/MODULE_GUIDE.md)
 - [Security / authorized use](docs/SECURITY.md) · root [SECURITY.md](SECURITY.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
 - [Contributing](docs/CONTRIBUTING.md)
 
 ## Design principles

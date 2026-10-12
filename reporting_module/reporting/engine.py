@@ -22,7 +22,15 @@ from reporting.schema import (
 )
 
 PRODUCT_NAME = "VulnSight — Intelligent Web Vulnerability Scanner"
-KNOWN_MODULES = ("xss", "sqli", "misconfig", "command_injection")
+KNOWN_MODULES = (
+    "recon",
+    "xss",
+    "sqli",
+    "command_injection",
+    "access_control",
+    "misconfig",
+    "reporting",
+)
 
 
 def run_report_pipeline(

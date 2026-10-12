@@ -77,6 +77,11 @@ def build_summary(findings: list[CanonicalFinding]) -> dict:
     candidates = by_verification.get("candidate", 0)
 
     observations = []
+    if not findings:
+        observations.append(
+            "No findings were reported for the modules that ran. Absence of findings "
+            "is not proof that the target is secure; coverage may be incomplete."
+        )
     if confirmed:
         observations.append(f"{confirmed} confirmed finding(s) require priority remediation.")
     if probable:
@@ -85,7 +90,7 @@ def build_summary(findings: list[CanonicalFinding]) -> dict:
         observations.append(
             f"{candidates} candidate finding(s) should not be treated as confirmed exploits."
         )
-    if any(f.cvss_status != "scored" for f in findings):
+    if findings and any(f.cvss_status != "scored" for f in findings):
         observations.append(
             "Some findings lack a complete CVSS vector and remain unscored/pending assessment."
         )

@@ -46,6 +46,8 @@ def run_report_module(
     strict: bool = False,
     modules_executed: list[str] | None = None,
     modules_not_executed: list[str] | None = None,
+    extra_limitations: list[str] | None = None,
+    mark_incomplete: bool = False,
 ) -> ReportResult:
     """Programmatic API for the main scanner / orchestration layer."""
     paths: list[str] = []
@@ -66,12 +68,20 @@ def run_report_module(
     for p in extra_paths or []:
         paths.append(p)
 
-    known = {"xss", "sqli", "misconfig", "command_injection"}
+    from reporting.engine import KNOWN_MODULES
+
+    known = set(KNOWN_MODULES)
     not_exec = modules_not_executed
     if not_exec is None:
         not_exec = sorted(known - set(executed))
 
-    return generate_report(
+    limitations = list(extra_limitations or [])
+    if mark_incomplete:
+        limitations.append(
+            "One or more scanner modules failed or were skipped; treat coverage as partial."
+        )
+
+    result = generate_report(
         output_dir=output_dir,
         input_paths=paths or None,
         findings_objects=findings_objects,
@@ -88,7 +98,11 @@ def run_report_module(
         strict=strict,
         modules_executed=executed,
         modules_not_executed=not_exec,
+        extra_limitations=limitations,
     )
+    if mark_incomplete:
+        result.incomplete = True
+    return result
 
 
 def build_parser() -> argparse.ArgumentParser:

@@ -62,6 +62,12 @@ def test_sqli_cmd_access_against_lab(lab_url, tmp_path):
     assert any(
         f.vulnerability_type == "OS Command Injection" for f in cmd_r.findings
     ), cmd_r
+    cmd_finding = next(
+        f for f in cmd_r.findings if f.vulnerability_type == "OS Command Injection"
+    )
+    assert cmd_finding.evidence.get("lab_simulation") is True
+    assert cmd_finding.evidence.get("os_shell_executed") is False
+    assert cmd_finding.verification_status == "probable"
 
     ac_r = ac(lab_url)
     types = {f.vulnerability_type for f in ac_r.findings}
@@ -117,3 +123,40 @@ def test_negative_controls_do_not_bypass_auth(lab_url):
     )
     assert r.status_code == 200
     assert "Invalid credentials" in r.text
+
+
+def test_secure_profile_and_admin_deny_cross_access(lab_url):
+    s = requests.Session()
+    login = s.post(
+        lab_url + "/login",
+        data={"username": "alice", "password": "alice123"},
+        timeout=5,
+        allow_redirects=False,
+    )
+    assert login.status_code in (302, 303)
+    denied = s.get(lab_url + "/profile-secure/2", timeout=5, allow_redirects=False)
+    assert denied.status_code == 403
+    admin = s.get(lab_url + "/admin-secure", timeout=5, allow_redirects=False)
+    assert admin.status_code == 403
+
+
+def test_encoded_xss_control_escapes_markup(lab_url):
+    payload = "<script>alert(1)</script>"
+    r = requests.get(lab_url + "/encoded", params={"q": payload}, timeout=5)
+    assert r.status_code == 200
+    assert "<script>alert(1)</script>" not in r.text
+    assert "&#" in r.text or "&lt;script&gt;" in r.text
+
+
+def test_lab_reset_clears_stored_comments(lab_url):
+    from target_app import app as lab_app
+
+    requests.post(lab_url + "/comment", data={"body": "persist-me"}, timeout=5)
+    before = requests.get(lab_url + "/comments", timeout=5)
+    assert "persist-me" in before.text
+    reset = requests.post(lab_url + "/_lab/reset", timeout=5)
+    assert reset.status_code == 200
+    after = requests.get(lab_url + "/comments", timeout=5)
+    assert "persist-me" not in after.text
+    # Module-level list should also be empty after reset endpoint
+    assert lab_app.COMMENTS == []

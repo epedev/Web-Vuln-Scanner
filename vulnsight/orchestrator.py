@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import json
 import logging
-import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
 from vulnsight import __version__
 from vulnsight.config import ScanConfig
 from vulnsight.paths import ensure_module_paths
@@ -40,20 +40,42 @@ class OrchestratorResult:
     crawl_map_path: str | None
     report_paths: dict[str, str]
     exit_code: int
+    scope_mode: str = "lab-loopback"
+    incomplete: bool = False
 
     def summary_lines(self) -> list[str]:
+        confirmed = suspected = 0
+        for f in self.findings:
+            status = (f.get("verification_status") or "").lower()
+            if status == "confirmed":
+                confirmed += 1
+            elif status in {"probable", "candidate"}:
+                suspected += 1
         lines = [
             f"VulnSight {__version__} scan of {self.target}",
-            f"Findings collected: {len(self.findings)}",
+            f"Scope: {self.scope_mode}",
+            (
+                f"Findings: {len(self.findings)} total "
+                f"({confirmed} confirmed, {suspected} suspected/probable/candidate)"
+            ),
         ]
-        for run in self.module_runs:
+        if self.incomplete:
             lines.append(
-                f"  [{run.status}] {run.name}: findings={run.findings_count}"
-                + (f" ({run.detail})" if run.detail else "")
+                "Coverage: PARTIAL — one or more modules failed or were skipped"
+            )
+        for run in self.module_runs:
+            extra = ""
+            if run.errors:
+                extra = f" error={run.errors[0][:120]}"
+            elif run.detail:
+                extra = f" ({run.detail})"
+            lines.append(
+                f"  [{run.status}] {run.name}: findings={run.findings_count}{extra}"
             )
         if self.report_paths:
-            for kind, path in self.report_paths.items():
-                lines.append(f"  report[{kind}]: {path}")
+            for kind, path in sorted(self.report_paths.items()):
+                if kind in {"json", "html", "findings", "pdf"}:
+                    lines.append(f"  report[{kind}]: {path}")
         return lines
 
 
@@ -81,8 +103,10 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
     ensure_module_paths()
     target = require_lab_target(cfg.target, allow_external=cfg.allow_external)
     origin = origin_of(target)
+    scope_mode = "external-authorized" if cfg.allow_external else "lab-loopback"
     out = Path(cfg.output_dir)
     out.mkdir(parents=True, exist_ok=True)
+    log.info("Starting scan target=%s scope=%s modules=%s", target, scope_mode, cfg.modules)
 
     module_runs: list[ModuleRun] = []
     all_findings: list[dict[str, Any]] = []
@@ -92,6 +116,7 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
     failed_any = False
     executed: list[str] = []
     not_executed: list[str] = []
+    failed_modules: list[str] = []
 
     # --- Recon ---
     if cfg.skip_recon or not _enabled(cfg, "recon"):
@@ -115,6 +140,7 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
                 )
             )
             failed_any = True
+            failed_modules.append("recon")
             not_executed.append("recon")
     else:
         try:
@@ -150,10 +176,10 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
                     "recon",
                     MODULE_STATUS_FAILED,
                     errors=[str(exc)],
-                    detail=traceback.format_exc(limit=3),
                 )
             )
             failed_any = True
+            failed_modules.append("recon")
             not_executed.append("recon")
 
     # --- XSS ---
@@ -199,6 +225,7 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
                 ModuleRun("xss", MODULE_STATUS_FAILED, errors=[str(exc)])
             )
             failed_any = True
+            failed_modules.append("xss")
             not_executed.append("xss")
 
     # --- SQLi ---
@@ -217,16 +244,21 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
             if result.errors and not findings:
                 status = MODULE_STATUS_FAILED
                 failed_any = True
+                failed_modules.append("sqli")
             module_runs.append(
                 ModuleRun("sqli", status, findings_count=len(findings), errors=list(result.errors))
             )
-            executed.append("sqli")
+            if status != MODULE_STATUS_FAILED:
+                executed.append("sqli")
+            else:
+                not_executed.append("sqli")
         except Exception as exc:  # noqa: BLE001
             log.exception("sqli failed")
             module_runs.append(
                 ModuleRun("sqli", MODULE_STATUS_FAILED, errors=[str(exc)])
             )
             failed_any = True
+            failed_modules.append("sqli")
             not_executed.append("sqli")
 
     # --- Command injection ---
@@ -247,6 +279,7 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
             if result.errors and not findings:
                 status = MODULE_STATUS_FAILED
                 failed_any = True
+                failed_modules.append("command_injection")
             module_runs.append(
                 ModuleRun(
                     "command_injection",
@@ -255,13 +288,17 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
                     errors=list(result.errors),
                 )
             )
-            executed.append("command_injection")
+            if status != MODULE_STATUS_FAILED:
+                executed.append("command_injection")
+            else:
+                not_executed.append("command_injection")
         except Exception as exc:  # noqa: BLE001
             log.exception("command_injection failed")
             module_runs.append(
                 ModuleRun("command_injection", MODULE_STATUS_FAILED, errors=[str(exc)])
             )
             failed_any = True
+            failed_modules.append("command_injection")
             not_executed.append("command_injection")
 
     # --- Access control ---
@@ -282,6 +319,7 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
             if result.errors and not findings:
                 status = MODULE_STATUS_FAILED
                 failed_any = True
+                failed_modules.append("access_control")
             module_runs.append(
                 ModuleRun(
                     "access_control",
@@ -290,13 +328,17 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
                     errors=list(result.errors),
                 )
             )
-            executed.append("access_control")
+            if status != MODULE_STATUS_FAILED:
+                executed.append("access_control")
+            else:
+                not_executed.append("access_control")
         except Exception as exc:  # noqa: BLE001
             log.exception("access_control failed")
             module_runs.append(
                 ModuleRun("access_control", MODULE_STATUS_FAILED, errors=[str(exc)])
             )
             failed_any = True
+            failed_modules.append("access_control")
             not_executed.append("access_control")
 
     # Combined findings dump (pre-report)
@@ -332,6 +374,12 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
             from report_module import run_report_module
 
             formats = list(cfg.formats) or ["json", "html"]
+            extra_limits: list[str] = []
+            if failed_modules:
+                extra_limits.append(
+                    "Failed modules (findings from other modules may still be valid): "
+                    + ", ".join(failed_modules)
+                )
             report = run_report_module(
                 findings_objects=all_findings,
                 output_dir=str(out),
@@ -346,6 +394,8 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
                 modules_executed=executed,
                 modules_not_executed=not_executed,
                 apply_cvss_suggestions=True,
+                extra_limitations=extra_limits,
+                mark_incomplete=bool(failed_modules or not_executed),
             )
             outputs = dict(getattr(report, "outputs", {}) or {})
             report_paths.update(outputs)
@@ -375,11 +425,12 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
                 ModuleRun("reporting", MODULE_STATUS_FAILED, errors=[str(exc)])
             )
             failed_any = True
+            failed_modules.append("reporting")
             report_paths["findings_raw"] = str(combined_path)
 
     # Exit codes: 0 ok, 1 module failure, 2 scope/config error (raised earlier)
     exit_code = 1 if failed_any else 0
-    # Findings present is still success if modules completed
+    incomplete = bool(failed_modules or any(r.status == MODULE_STATUS_SKIPPED for r in module_runs))
     return OrchestratorResult(
         target=target,
         output_dir=str(out),
@@ -388,6 +439,8 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
         crawl_map_path=crawl_map_path,
         report_paths=report_paths,
         exit_code=exit_code,
+        scope_mode=scope_mode,
+        incomplete=incomplete,
     )
 
 

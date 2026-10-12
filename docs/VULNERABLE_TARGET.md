@@ -12,6 +12,16 @@ python target_app/app.py
 
 Environment: `VULNSIGHT_LAB_HOST` (default `127.0.0.1`), `VULNSIGHT_LAB_PORT` (default `5001`).
 
+## Reset to a clean demo state
+
+Stored XSS comments are kept in memory; users live in SQLite (`target_app/lab.db`).
+
+```bash
+curl -X POST http://127.0.0.1:5001/_lab/reset
+```
+
+This reseeds the fake users and clears stored comments. Prefer a reset before every graded demonstration.
+
 ## Seeded users
 
 | id | username | password | admin |

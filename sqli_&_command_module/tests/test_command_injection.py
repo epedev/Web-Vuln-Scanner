@@ -17,8 +17,13 @@ class TestCommandInjection(unittest.TestCase):
         result = check_local_target("http://127.0.0.1:5000")
 
         self.assertEqual(len(result.findings), 1)
-        self.assertEqual(result.findings[0].cwe, "CWE-78")
+        finding = result.findings[0]
+        self.assertEqual(finding.cwe, "CWE-78")
         self.assertEqual(result.stats["requests_sent"], 2)
+        self.assertTrue(finding.evidence.get("lab_simulation"))
+        self.assertFalse(finding.evidence.get("os_shell_executed"))
+        self.assertEqual(finding.verification_status, "probable")
+        self.assertIn("simulat", finding.description.lower())
 
     def test_rejects_non_local_target(self):
         with self.assertRaises(ValueError):

@@ -164,7 +164,14 @@
         <li class="muted">No major observations.</li>
         {% endfor %}
       </ul>
+      {% if summary.total_unique_findings == 0 %}
+      <div class="notice" role="status">
+        <strong>No findings reported</strong> for the modules that ran.
+        This is not a certification of security and does not mean the target is safe.
+      </div>
+      {% endif %}
       <p class="muted">Scope: {{ metadata.scope }}</p>
+      <p class="muted">{{ metadata.purpose }}</p>
     </section>
 
     <section id="findings-overview">

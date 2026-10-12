@@ -80,32 +80,46 @@ def check_local_target(base_url: str) -> ScanResult:
     result.findings.append(
         Finding(
             vulnerability_type="OS Command Injection",
-            title="Command injection marker observed",
+            title="Command-injection sink pattern (lab simulation)",
             url=ping_url,
             method="POST",
             parameter="host",
             input_type="form",
-            context="Ping command output",
+            context="Ping command output (simulated lab sink)",
             payload_or_probe_id="local-command-marker-probe",
             evidence={
                 "marker": marker,
                 "marker_observed": True,
                 "baseline_status": baseline.status_code,
                 "test_status": test.status_code,
+                "lab_simulation": True,
+                "os_shell_executed": False,
+                "note": (
+                    "The VulnSight lab echoes the marker without invoking an OS shell. "
+                    "Treat this as evidence of an unsafe concatenation pattern, not as "
+                    "proof that the host executed operating-system commands."
+                ),
             },
             detection_method="output_marker",
             confidence=Confidence.HIGH.value,
-            severity=Severity.CRITICAL.value,
-            verification_status=VerificationStatus.CONFIRMED.value,
+            severity=Severity.HIGH.value,
+            verification_status=VerificationStatus.PROBABLE.value,
             http_status=test.status_code,
             description=(
-                "A unique marker supplied through the host parameter appeared "
-                "in the response from the local training application."
+                "A unique marker injected through the host parameter appeared in the "
+                "response. Against the VulnSight lab this demonstrates a simulated "
+                "command-injection sink (no OS shell is executed)."
             ),
-            impact="An attacker may execute commands with the web server's privileges.",
+            impact=(
+                "In a real application that concatenates user input into a shell "
+                "command, an attacker could run arbitrary OS commands with the web "
+                "server's privileges. This lab finding proves the unsafe pattern, "
+                "not live OS command execution."
+            ),
             remediation=(
-                "Avoid shell=True. Pass arguments as a list with shell=False "
-                "and validate hostnames or IP addresses."
+                "Do not invoke a shell with user-controlled input. Prefer safe APIs, "
+                "pass arguments as a list with shell=False, and validate hostnames "
+                "or IP addresses with an allowlist."
             ),
             cwe="CWE-78",
             module="command_injection",

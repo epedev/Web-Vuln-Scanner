@@ -1,18 +1,18 @@
 # Root convenience install for VulnSight modules.
-# Prefer module-local requirements.txt when working on a single package.
+# Preferred path: pip install -e ".[dev]" (see pyproject.toml).
 
-# Shared / XSS
+# Core
 requests>=2.31.0
 beautifulsoup4>=4.12.0
-lxml>=5.0.0
 flask>=3.0.0
-
-# Reporting
 cvss>=3.0
 jinja2>=3.1
 
 # Testing
 pytest>=8.0.0
+
+# Optional faster HTML parse (BeautifulSoup falls back to html.parser)
+# lxml>=5.0.0
 
 # Optional PDF reporting
 # weasyprint>=60.0

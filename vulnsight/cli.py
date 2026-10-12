@@ -99,6 +99,22 @@ def _cmd_scan(args: argparse.Namespace) -> int:
         skip = {m.strip() for m in args.skip_modules.split(",") if m.strip()}
         modules = [m for m in modules if m not in skip]
 
+    scope_label = (
+        "external (--allow-external)"
+        if args.allow_external
+        else "lab-loopback (127.0.0.1/localhost/::1)"
+    )
+    print("VulnSight scan")
+    print(f"  target:  {args.target}")
+    print(f"  scope:   {scope_label}")
+    print(f"  modules: {','.join(modules)}")
+    print(f"  output:  {args.output}")
+    if args.allow_external:
+        print(
+            "  WARNING: external target mode enabled — use only with written authorization.",
+            file=sys.stderr,
+        )
+
     cfg = ScanConfig(
         target=args.target,
         output_dir=args.output,
@@ -107,7 +123,7 @@ def _cmd_scan(args: argparse.Namespace) -> int:
         timeout=args.timeout,
         max_requests=args.max_requests,
         allow_external=args.allow_external,
-        allow_loopback=not args.allow_external,
+        allow_loopback=True,
         verbose=args.verbose,
         enable_stored_xss=not args.no_stored_xss,
         enable_active_verify=not args.marker_only,
@@ -121,13 +137,25 @@ def _cmd_scan(args: argparse.Namespace) -> int:
         result = run_scan(cfg)
     except ScopeError as exc:
         print(f"scope error: {exc}", file=sys.stderr)
+        print(
+            "hint: default lab mode allows only http://127.0.0.1, localhost, or ::1. "
+            "Use --allow-external only for authorized non-lab targets.",
+            file=sys.stderr,
+        )
         return 2
     except Exception as exc:  # noqa: BLE001
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
+    print("---")
     for line in result.summary_lines():
         print(line)
+    if result.exit_code != 0:
+        print(
+            "Scan finished with module failures (exit 1). "
+            "Findings from successful modules were still written when available.",
+            file=sys.stderr,
+        )
     return result.exit_code
 
 
