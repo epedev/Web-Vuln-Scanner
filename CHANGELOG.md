@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.6 — Crawl-map detection for BYO vulnerable labs
+
+- SQLi, command injection, and access control now use crawl-map discovery instead of only the removed training-lab routes
+- Flexible login SQLi bypass signals + unauthenticated IDOR/BAC fallbacks
+- Report filter shows "N of M" and matches severity/search more reliably
+- Document expected BYO lab signals in docs/VULNERABLE_TARGET.md
+
 ## 0.1.5 — Interactive docs + polished report UI
 
 - Add interactive `docs/index.html` showcase with command recipes

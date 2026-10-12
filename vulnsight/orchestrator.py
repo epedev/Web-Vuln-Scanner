@@ -236,7 +236,12 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
         try:
             from sqli.detector import check_local_target as sqli_check
 
-            result = sqli_check(target)
+            result = sqli_check(
+                target,
+                crawl_map=crawl_map,
+                timeout=cfg.timeout,
+                max_requests=min(40, cfg.max_requests),
+            )
             findings = _finding_dicts(result)
             all_findings.extend(findings)
             _write_json(out / "findings_sqli.json", result.to_dict())
@@ -271,7 +276,12 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
         try:
             from command_injection.detector import check_local_target as cmd_check
 
-            result = cmd_check(target)
+            result = cmd_check(
+                target,
+                crawl_map=crawl_map,
+                timeout=cfg.timeout,
+                max_probes=12,
+            )
             findings = _finding_dicts(result)
             all_findings.extend(findings)
             _write_json(out / "findings_command_injection.json", result.to_dict())
@@ -311,7 +321,7 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
         try:
             from access_control.detector import check_local_target as ac_check
 
-            result = ac_check(target)
+            result = ac_check(target, crawl_map=crawl_map)
             findings = _finding_dicts(result)
             all_findings.extend(findings)
             _write_json(out / "findings_access_control.json", result.to_dict())

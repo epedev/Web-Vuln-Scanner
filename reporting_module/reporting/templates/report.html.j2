@@ -332,34 +332,49 @@
   </div>
   <script>
     (function () {
-      const chips = [...document.querySelectorAll('.chip')];
+      const chips = [...document.querySelectorAll('.chip[data-filter]')];
       const search = document.getElementById('find-search');
       const rows = [...document.querySelectorAll('tr.finding-row')];
       const details = [...document.querySelectorAll('article.finding')];
       const countEl = document.getElementById('filter-count');
       let severity = 'all';
+      const total = rows.length;
+
+      function haystack(el) {
+        return (
+          (el.getAttribute('data-search') || el.dataset.search || '') +
+          ' ' +
+          (el.textContent || '')
+        ).toLowerCase();
+      }
 
       function apply() {
-        const q = (search.value || '').trim().toLowerCase();
+        const q = ((search && search.value) || '').trim().toLowerCase();
         let visible = 0;
         rows.forEach((row) => {
-          const sevOk = severity === 'all' || row.dataset.severity === severity;
-          const textOk = !q || (row.dataset.search || '').includes(q);
+          const sev = (row.getAttribute('data-severity') || row.dataset.severity || '').toLowerCase();
+          const sevOk = severity === 'all' || sev === severity;
+          const textOk = !q || haystack(row).includes(q);
           const show = sevOk && textOk;
           row.hidden = !show;
           if (show) visible += 1;
         });
         details.forEach((el) => {
-          const sevOk = severity === 'all' || el.dataset.severity === severity;
-          const textOk = !q || (el.dataset.search || '').includes(q);
+          const sev = (el.getAttribute('data-severity') || el.dataset.severity || '').toLowerCase();
+          const sevOk = severity === 'all' || sev === severity;
+          const textOk = !q || haystack(el).includes(q);
           el.hidden = !(sevOk && textOk);
         });
-        if (countEl) countEl.textContent = visible + ' finding(s) visible';
+        if (countEl) {
+          countEl.textContent = total
+            ? visible + ' of ' + total + ' finding(s) visible'
+            : '0 findings in this report';
+        }
       }
 
       chips.forEach((chip) => {
         chip.addEventListener('click', () => {
-          severity = chip.dataset.filter;
+          severity = (chip.dataset.filter || 'all').toLowerCase();
           chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
           apply();
         });

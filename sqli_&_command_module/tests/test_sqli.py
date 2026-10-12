@@ -48,5 +48,36 @@ class TestSQLi(unittest.TestCase):
         self.assertEqual(result.findings, [])
 
 
+
+    @patch("sqli.detector.requests.Session")
+    def test_crawl_map_error_based(self, mock_session):
+        client = Mock()
+        mock_session.return_value.__enter__.return_value = client
+
+        baseline = Mock(status_code=200, text="Invalid credentials", headers={})
+        bypass = Mock(status_code=200, text="still invalid", headers={})
+        err = Mock(
+            status_code=500,
+            text="sqlite3.OperationalError: near \'\'",
+            headers={},
+        )
+        # login baseline+test, then GET error-based probes until match
+        client.post.side_effect = [baseline, bypass]
+        client.get.return_value = err
+        client.request.return_value = err
+
+        crawl = {
+            "forms": [],
+            "pages": [
+                {
+                    "url": "http://127.0.0.1:5000/search",
+                    "params": [{"name": "q", "value": "x", "source": "query"}],
+                }
+            ],
+        }
+        result = check_local_target("http://127.0.0.1:5000", crawl_map=crawl)
+        self.assertTrue(any("error-based" in f.title.lower() for f in result.findings))
+
+
 if __name__ == "__main__":
     unittest.main()

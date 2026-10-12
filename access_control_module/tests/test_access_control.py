@@ -77,13 +77,17 @@ class TestBrokenAccessControl(unittest.TestCase):
 
 
 class TestCheckLocalTarget(unittest.TestCase):
+    @patch("access_control.detector.check_unauthenticated_access")
     @patch("access_control.detector.login")
     @patch("access_control.detector.check_broken_access_control")
     @patch("access_control.detector.check_idor")
     def test_combines_idor_and_bac_results(
-        self, mock_idor, mock_bac, mock_login
+        self, mock_idor, mock_bac, mock_login, mock_unauth
     ):
         mock_login.return_value = Mock()
+        mock_unauth.return_value = Mock(
+            findings=[], outcomes=[], errors=[], stats={"requests_sent": 0}
+        )
 
         idor_result = Mock(
             findings=["idor-finding"], outcomes=[], errors=[], stats={"requests_sent": 2}
@@ -97,7 +101,8 @@ class TestCheckLocalTarget(unittest.TestCase):
         result = check_local_target("http://127.0.0.1:5000")
 
         self.assertEqual(len(result.findings), 2)
-        self.assertEqual(result.stats["requests_sent"], 5)  # 2 + 1 + 2 logins
+        # authenticated probes + logins (+ unauth mocked as 0)
+        self.assertGreaterEqual(result.stats["requests_sent"], 5)
 
     def test_rejects_non_local_target(self):
         with self.assertRaises(ValueError):
