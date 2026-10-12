@@ -13,7 +13,6 @@ MODULE_DIRS = {
     "sqli": REPO_ROOT / "sqli_&_command_module",
     "access_control": REPO_ROOT / "access_control_module",
     "reporting": REPO_ROOT / "reporting_module",
-    "target_app": REPO_ROOT / "target_app",
 }
 
 

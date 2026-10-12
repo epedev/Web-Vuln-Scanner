@@ -1,19 +1,15 @@
-# Expected lab findings (reference)
+# Expected findings (operator reference)
 
-Against `target_app` on `http://127.0.0.1:5001`, a full `vulnsight scan` should typically report:
+VulnSight does not ship a vulnerable target. Expected findings depend on the prepared local website you authorize.
 
-| Class | Endpoint | Notes |
-|-------|----------|-------|
-| Reflected XSS | `/reflect?q=` | Candidate/probable unless browser verify confirms |
-| Stored XSS | `/comment` → `/comments` | Marker reflection on render page |
-| SQL injection | `POST /login` | Auth bypass via `admin' -- ` |
-| Command injection (simulated) | `POST /ping` | Marker `REDOPS_CMD_TEST` in response |
-| IDOR | `GET /profile/<id>` | Alice session reads Bob/Admin profiles |
-| Broken access control | `GET /admin` | Non-admin session gets HTTP 200 |
+When your lab plants the usual graduation scenarios, a full `vulnsight scan` may report classes such as:
 
-Negative controls (should **not** produce equivalent confirmed findings):
+| Class | Typical signal |
+|-------|----------------|
+| Reflected / stored XSS | `xss.reflected` / `xss.stored` |
+| SQL injection | auth bypass or error-based evidence |
+| Command injection | marker / behavior defined by your lab |
+| IDOR | unauthorized object access |
+| Broken access control | privileged route reachable without role |
 
-- `/encoded` — HTML-escaped reflection
-- `/login-secure` — parameterized SQL
-- `/profile-secure/<id>` — ownership check
-- `/admin-secure` — role check
+Negative controls on your lab should not produce equivalent confirmed findings.

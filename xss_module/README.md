@@ -18,11 +18,10 @@ cd xss_module
 python -m pip install -r requirements.txt
 ```
 
-## Run (against the shared VulnSight lab)
+## Run (against your authorized local website)
 
 ```bash
-# Terminal A — prepared vulnerable target (repo root)
-python target_app/app.py
+# Terminal A — start YOUR prepared local target on http://127.0.0.1:5001
 
 # Terminal B
 python xss_module.py \
@@ -37,7 +36,8 @@ python xss_module.py \
 Or from the repository root with the full scanner:
 
 ```bash
-vulnsight scan --project fixtures/sample_project.json
+vulnsight init-project -o myproject.json --target http://127.0.0.1:5001
+vulnsight scan --project myproject.json
 ```
 
 ## Programmatic API
@@ -63,7 +63,7 @@ pytest -q
 
 - [XSS_MODULE.md](docs/XSS_MODULE.md)
 - [CRAWL_MAP_SCHEMA.md](docs/CRAWL_MAP_SCHEMA.md)
-- [Shared lab (`target_app`)](../target_app/README.md)
+- [Target guidance](../docs/VULNERABLE_TARGET.md)
 
 ## Notes
 

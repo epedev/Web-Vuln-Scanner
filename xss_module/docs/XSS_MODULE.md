@@ -75,13 +75,12 @@ python -m pip install -r requirements.txt
 # python -m pip install playwright && playwright install chromium
 ```
 
-## Run against the shared VulnSight lab
+## Run against your authorized local website
 
-Use the prepared application in `target_app/` (not a module-local mock).
+VulnSight does not ship a vulnerable app. Start your own prepared local target first.
 
 ```bash
-# Terminal 1 (from repository root)
-python target_app/app.py
+# Terminal 1 — your authorized local website on http://127.0.0.1:5001
 
 # Terminal 2 (from xss_module/)
 python xss_module.py \

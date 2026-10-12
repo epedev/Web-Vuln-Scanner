@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4 — No bundled vulnerable target
+
+- Remove `target_app/` and mock XSS fixture apps from the repository
+- Scanner expects an operator-provided authorized local website via `--project` / `--target`
+- Live integration tests are optional behind `VULNSIGHT_LAB_URL`
+
 ## 0.1.1 — Graduation polish
 
 - Clarify simulated command-injection findings (no OS shell claim; probable + lab_simulation evidence)

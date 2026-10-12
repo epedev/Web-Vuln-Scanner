@@ -2,9 +2,9 @@
 
 **See the weakness. Prove the risk. Secure the web.**
 
-Linux-style CLI cybersecurity tool: clone → install → authorize a local website with a project file → scan with all modules → open the HTML/JSON report.
+Linux-style CLI cybersecurity tool: clone → install → authorize your local website with a project file → scan with all modules → open the HTML/JSON report.
 
-> **Authorization required.** Only scan systems you own or have explicit written permission to test. A project file is the preferred way to declare that authorization. Crawl-map URLs are not automatic permission to attack.
+> **Authorization required.** Only scan systems you own or have explicit written permission to test. VulnSight does **not** ship a vulnerable target application — bring your own authorized local website.
 
 ## Install (one-time)
 
@@ -21,61 +21,29 @@ python -m pip install -e ".[dev]"
 vulnsight doctor
 ```
 
-After this, the single command you use day-to-day is `vulnsight`.
-
-## Scan an authorized local website
-
-### 1) Start the site you own / are allowed to test
-
-Example — built-in lab:
+## Scan your authorized local website
 
 ```bash
-python target_app/app.py
-# http://127.0.0.1:5001
-```
+# 1) Start YOUR prepared vulnerable / test website locally
+#    example: http://127.0.0.1:5001
 
-Or start your own local web app on any loopback/private port.
-
-### 2) Create an authorization project file
-
-```bash
+# 2) Create an authorization project file
 vulnsight init-project \
   -o myproject.json \
   --target http://127.0.0.1:5001 \
   --name "My Local App" \
-  --project-path ./target_app
-```
+  --project-path /path/to/your/app
 
-Edit `myproject.json` and set `authorization.authorized_by` to your name.
-Keep `authorization.i_own_or_have_permission` set to `true` only if that is true.
-
-Optional `project_path` points at the local application folder under test (metadata for the report/operators). VulnSight is a **dynamic web scanner**; it tests the running website URL, not source code as SAST.
-
-### 3) Run all modules and generate the report
-
-```bash
+# 3) Edit authorization.authorized_by, then scan all modules + report
 vulnsight scan --project myproject.json
 ```
 
-That single command:
+Reports:
 
-1. Validates your authorization project file
-2. Runs recon + XSS + SQLi + command injection + access control + reporting
-3. Writes:
+- `reports/vulnsight_report.html`
+- `reports/findings.json`
 
-- `reports/vulnsight_report.html` — human-readable findings
-- `reports/findings.json` — machine-readable findings
-
-Open the HTML report in a browser when the scan finishes.
-
-### Lab shortcut (already authorized sample)
-
-```bash
-python target_app/app.py   # terminal A
-vulnsight scan --project fixtures/sample_project.json   # terminal B
-```
-
-## Other useful commands
+## Other commands
 
 ```bash
 vulnsight --help
@@ -89,12 +57,11 @@ vulnsight report --input ./reports/findings.json --format html -o ./reports
 
 | Path | Role |
 |------|------|
-| `vulnsight/` | CLI, project authorization, orchestrator, scope |
+| `vulnsight/` | CLI, project authorization, orchestrator, scope, terminal UI |
 | `Crawler/` | Recon → `crawl_map.json` |
 | `xss_module/` | Reflected / stored XSS |
-| `sqli_&_command_module/` | SQLi + simulated command injection |
+| `sqli_&_command_module/` | SQLi + command injection checks |
 | `access_control_module/` | IDOR + broken access control |
-| `target_app/` | Deliberately vulnerable local Flask lab |
 | `reporting_module/` | CVSS scoring + HTML/JSON reports |
 | `fixtures/sample_project.json` | Example authorized project file |
 
@@ -104,11 +71,17 @@ vulnsight report --input ./reports/findings.json --format html -o ./reports
 python -m pytest
 ```
 
+Live integration against your own lab (optional):
+
+```bash
+export VULNSIGHT_LAB_URL=http://127.0.0.1:5001
+python -m pytest tests/integration -q
+```
+
 ## Documentation
 
 - [Usage](docs/USAGE.md) · [Installation](docs/INSTALLATION.md) · [Demo runbook](docs/DEMO_RUNBOOK.md)
-- [Architecture](docs/ARCHITECTURE.md) · [Vulnerable target](docs/VULNERABLE_TARGET.md)
-- [Security](docs/SECURITY.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Architecture](docs/ARCHITECTURE.md) · [Security](docs/SECURITY.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 ## License
 

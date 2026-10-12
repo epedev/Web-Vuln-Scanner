@@ -2,91 +2,71 @@
 
 Use this checklist for a live presentation or screen recording. Do **not** claim a video exists unless you have recorded one.
 
+VulnSight does not bundle a vulnerable app — start your team's prepared local website before the demo.
+
 ## 0. Environment (once)
 
 ```bash
 cd Web-Vuln-Scanner
 python3 -m venv .venv
-source .venv/bin/activate          # Windows: .\.venv\Scripts\Activate.ps1
+source .venv/bin/activate
 python -m pip install -e ".[dev]"
 vulnsight doctor
 ```
 
 Expected: `RESULT: ready`.
 
-## 1. Clean lab state
+## 1. Start your prepared local target
+
+Start the website you are authorized to test (loopback recommended).
+
+Confirm it opens in a browser (example: `http://127.0.0.1:5001`).
+
+## 2. Authorize + full scanner run
 
 ```bash
-# Terminal A
-python target_app/app.py
-```
-
-In another shell (lab must already be running):
-
-```bash
-curl -X POST http://127.0.0.1:5001/_lab/reset
-```
-
-Confirm home page opens at http://127.0.0.1:5001.
-
-## 2. Full scanner run
-
-```bash
-# Terminal B
-vulnsight scan --target http://127.0.0.1:5001 --output ./reports -v
+vulnsight init-project -o demo-project.json --target http://127.0.0.1:5001 --name "Demo Lab"
+# set authorization.authorized_by
+vulnsight scan --project demo-project.json
 ```
 
 Show:
 
-- Startup scope line (`lab-loopback`)
+- Banner / SCAN BRIEF UI
 - Per-module status lines
 - `reports/vulnsight_report.html` and `reports/findings.json`
 
-## 3. Walk each vulnerability class
+## 3. Walk vulnerability classes your lab plants
 
-| Class | Vulnerable demo | Secure negative control | What to say |
-|-------|-----------------|-------------------------|-------------|
-| Reflected XSS | `/reflect?q=<b>x</b>` | `/encoded?q=<b>x</b>` | Raw reflection vs context encoding |
-| Stored XSS | POST `/comment` then `/comments` | Reset clears store | Persist + render path |
-| SQLi | login `admin' -- ` / any password | `/login-secure` rejects | Parameterized queries |
-| Cmd injection (simulated) | POST `/ping` host `127.0.0.1; printf REDOPS_CMD_TEST` | Lab does **not** run a shell | Unsafe concat pattern only |
-| IDOR | login alice → `/profile/2` | `/profile-secure/2` → 403 | Object-level authz |
-| Broken AC | alice → `/admin` 200 | `/admin-secure` → 403 | Role checks |
+For each class your prepared site demonstrates (XSS, SQLi, command injection, IDOR, broken access control):
 
-## 4. Report narration
+1. Show the vulnerable behavior in the browser
+2. Show the scanner finding in the HTML report
+3. Explain root cause + secure fix
+4. Show a secure/negative control if your lab provides one
 
-In the HTML report, for one finding of each class cover:
+## 4. Safety talking points
 
-1. Verification status vs confidence vs severity
-2. Sanitized evidence
-3. Root cause
-4. Remediation / secure-code idea
-5. CWE / OWASP
-6. Limitations (partial coverage, optional browser verify, simulated cmd injection)
-
-## 5. Safety talking points
-
-- Explicit `--target` required
+- Explicit `--target` / project file required
 - Default scope is loopback only
 - Crawler discovery ≠ authorization
 - `--allow-external` is opt-in and warned
 
-## 6. Screen-recording checklist
+## 5. Screen-recording checklist
 
 - [ ] Show `vulnsight doctor`
-- [ ] Show lab home + reset
-- [ ] Show one vulnerable vs secure pair live in browser
-- [ ] Run `vulnsight scan` end-to-end
+- [ ] Show your prepared lab home page
+- [ ] Show project file authorization fields
+- [ ] Run `vulnsight scan --project ...`
 - [ ] Open HTML report executive summary
 - [ ] Open one detailed finding with remediation
-- [ ] State limitations honestly (DOM XSS experimental, no full OWASP Top 10 claim)
-- [ ] Stop lab (`Ctrl+C`)
+- [ ] State limitations honestly
+- [ ] Stop your lab process
 
-## 7. Common demo failures
+## 6. Common demo failures
 
 | Symptom | Fix |
 |---------|-----|
-| Port 5001 busy | `VULNSIGHT_LAB_PORT=5002 python target_app/app.py` and retarget scan |
-| Stale stored XSS | `curl -X POST http://127.0.0.1:5001/_lab/reset` |
-| Scope error | Use `http://127.0.0.1:5001`, not a public hostname |
+| Connection errors | Confirm your lab is listening on the project target URL |
+| Scope error | Use `http://127.0.0.1:...` or authorize private hosts in the project file |
 | Missing vulnsight | Activate venv; `pip install -e ".[dev]"` |

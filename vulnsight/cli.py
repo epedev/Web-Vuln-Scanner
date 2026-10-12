@@ -75,13 +75,12 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     except Exception as exc:  # noqa: BLE001
         ui.status_info(f"browser verify check skipped ({exc})")
 
-    lab = MODULE_DIRS["target_app"] / "app.py"
-    if lab.is_file():
-        ui.status_ok("lab app present")
-        ui.status_info("start lab: python target_app/app.py")
-    else:
-        ui.status_fail(f"lab app missing at {lab}")
-        ok = False
+    ui.status_info(
+        "No bundled vulnerable app — point vulnsight at your authorized local website"
+    )
+    ui.status_info(
+        "Create a project file: vulnsight init-project -o myproject.json --target http://127.0.0.1:PORT"
+    )
 
     ui.render_doctor_footer(ok)
     return 0 if ok else 1

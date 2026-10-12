@@ -2,34 +2,27 @@
 
 ## Authorized-use warning
 
-Only scan systems you own or have explicit written permission to test. VulnSight defaults to the local lab (`127.0.0.1` / `localhost`). Crawler-discovered URLs are **not** authorization.
+Only scan systems you own or have explicit written permission to test. VulnSight defaults to loopback (`127.0.0.1` / `localhost` / `::1`). Crawler-discovered URLs are **not** authorization.
 
-## Start the lab
-
-```bash
-# Terminal A
-python target_app/app.py
-# Lab: http://127.0.0.1:5001
-```
-
-Stop with `Ctrl+C`. The lab binds loopback only by default.
+VulnSight does not include a vulnerable target application. Start your own prepared local website first.
 
 ## Authorized project scan (recommended)
 
 ```bash
 # Create a project/authorization file for the local website under test
-vulnsight init-project -o myproject.json --target http://127.0.0.1:5001 --project-path ./target_app
+vulnsight init-project -o myproject.json \
+  --target http://127.0.0.1:5001 \
+  --project-path /path/to/your/app
 
 # Edit authorized_by, then run every module and generate reports
 vulnsight scan --project myproject.json
 ```
 
-The project JSON is your authorization record + target configuration. It can also point at the local app folder via `project_path` (operator metadata; scanning still hits the live URL).
+The project JSON is your authorization record + target configuration. Optional `project_path` is metadata about the local codebase; scanning still hits the live URL.
 
 ## Direct URL scan (lab loopback)
 
 ```bash
-# Terminal B
 vulnsight scan --target http://127.0.0.1:5001 --output ./reports -v
 ```
 
@@ -54,12 +47,14 @@ Useful `scan` flags:
 
 | Flag | Purpose |
 |------|---------|
+| `--project FILE` | Authorized project JSON (preferred) |
 | `--modules recon,xss,sqli,...` | Run a subset |
 | `--skip-modules reporting` | Skip a module |
 | `--crawl-map PATH` | Reuse a crawl map (skips recon) |
-| `--marker-only` | XSS reflection markers only |
+| `--marker-only` | XSS marker-only mode |
 | `--browser-verify` | Optional Playwright confirmation |
 | `--allow-external` | Permit non-loopback targets (explicit) |
+| `--no-color` | Disable terminal colors |
 | `--max-pages` / `--max-requests` / `--timeout` | Budgets |
 
 ## Module-only workflows

@@ -6,21 +6,19 @@ Install from repository root (`pip install -e .`) or ensure `xss_module` is on `
 
 ## Scope errors on scan
 
-Default lab mode rejects non-loopback hosts. For authorized external tests only:
+Default lab mode rejects non-loopback hosts. For authorized private/local targets use a project file:
 
 ```bash
-vulnsight scan --target https://authorized.example --allow-external ...
+vulnsight init-project -o myproject.json --target http://192.168.1.10:8080
+# set allow_private_network true and authorization fields
+vulnsight scan --project myproject.json
 ```
 
-## Lab not detecting SQLi / IDOR
+## Connection / empty crawl map
 
-1. Confirm lab is the team `target_app`, not the XSS-only fixture.
-2. Reseed: `python target_app/seed_data.py`
-3. Verify `/login` returns “Invalid credentials” for bad passwords.
-
-## XSS finds nothing
-
-Ensure recon produced pages with parameters (`reports/crawl_map.json`).
+1. Confirm your prepared website is running at the project `target` URL.
+2. Confirm the origin matches (`authorized_origins`).
+3. Increase `--max-pages` / `--timeout` if the site is slow.
 
 ## Partial module failures
 

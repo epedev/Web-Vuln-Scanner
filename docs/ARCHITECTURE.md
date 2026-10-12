@@ -1,6 +1,6 @@
 # Architecture
 
-VulnSight is a modular monorepo integrated by a thin CLI/orchestrator.
+VulnSight is a modular monorepo integrated by a thin CLI/orchestrator. It scans an operator-provided authorized website; it does not ship a vulnerable target app.
 
 ```mermaid
 flowchart LR
@@ -27,7 +27,7 @@ flowchart LR
 | 2 Injection | `sqli_&_command_module/` | `check_local_target(base_url)` | `ScanResult` / `Finding` |
 | 3 XSS | `xss_module/` | `run_xss_module(...)` | `ScanResult` + crawl map consumer |
 | 4 Auth/AC | `access_control_module/` | `check_local_target(base_url)` | Lab identities + `ScanResult` |
-| 5 Lab + reporting | `target_app/`, `reporting_module/` | Flask lab; `run_report_module(...)` | Canonical findings + HTML/JSON |
+| 5 Reporting | `reporting_module/` | `run_report_module(...)` | Canonical findings + HTML/JSON |
 
 ## Shared models
 
@@ -40,13 +40,12 @@ flowchart LR
 1. Accept a validated `crawl_map.json` and/or explicit lab URL.
 2. Emit `Finding` objects via `scanner.models` (or JSON compatible with reporting normalization).
 3. Register the module name in `vulnsight.config.ALL_MODULES` and call it from `vulnsight.orchestrator`.
-4. Add unit tests plus a lab positive/negative case.
+4. Add unit tests plus optional live tests behind `VULNSIGHT_LAB_URL`.
 5. Document ownership in this file and `docs/MODULE_GUIDE.md`.
 
 ## Safety
 
-- Explicit `--target` required
+- Explicit `--target` or authorized `--project` file required
 - Default allowlist: `127.0.0.1` / `localhost` / `::1` over HTTP
 - Redirects re-checked inside crawler and XSS HTTP engines
-- Command-injection lab is **simulated** (no OS shell)
 - Module failures preserve findings from successful modules and mark coverage partial

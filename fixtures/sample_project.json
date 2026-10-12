@@ -1,17 +1,16 @@
 {
   "version": "1.0",
-  "project_name": "VulnSight Lab",
+  "project_name": "Authorized Local Website",
   "target": "http://127.0.0.1:5001",
   "authorized_origins": [
     "http://127.0.0.1:5001"
   ],
   "authorization": {
     "i_own_or_have_permission": true,
-    "authorized_by": "VulnSight Team",
+    "authorized_by": "Example Operator",
     "statement": "I own this system or have explicit written authorization to test it.",
-    "notes": "Integrated deliberately vulnerable Flask lab for authorized local demos."
+    "notes": "Point target at your own prepared local vulnerable website before scanning."
   },
-  "project_path": "../target_app",
   "modules": "all",
   "output": "./reports",
   "allow_private_network": true,
