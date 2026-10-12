@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 
 import requests
 
-from xss_module.scanner.models import (
+from scanner.models import (
     Confidence,
     Finding,
     ScanResult,

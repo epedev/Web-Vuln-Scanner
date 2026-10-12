@@ -101,17 +101,21 @@ def test_external_requests_blocked_handler():
             def __exit__(self, *a):
                 return False
 
-        with patch("playwright.sync_api.sync_playwright", return_value=CM()):
-            from xss.browser_verify import verify_url_execution
+        with patch.dict(
+            "sys.modules",
+            {"playwright": MagicMock(), "playwright.sync_api": MagicMock()},
+        ):
+            with patch("playwright.sync_api.sync_playwright", return_value=CM()):
+                from xss.browser_verify import verify_url_execution
 
-            verify_url_execution(
-                "http://127.0.0.1:5001/reflect",
-                signal_token="tok",
-                allowed_origins=["http://127.0.0.1:5001"],
-            )
-            assert "h" in handlers
-            handlers["h"](Route("http://evil.example/x.js"))
-            handlers["h"](Route("http://127.0.0.1:5001/ok.js"))
+                verify_url_execution(
+                    "http://127.0.0.1:5001/reflect",
+                    signal_token="tok",
+                    allowed_origins=["http://127.0.0.1:5001"],
+                )
+                assert "h" in handlers
+                handlers["h"](Route("http://evil.example/x.js"))
+                handlers["h"](Route("http://127.0.0.1:5001/ok.js"))
 
     assert aborted == ["http://evil.example/x.js"]
     mock_context.close.assert_called()

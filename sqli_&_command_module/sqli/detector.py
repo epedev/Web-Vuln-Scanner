@@ -159,9 +159,7 @@ def check_local_target(base_url: str) -> ScanResult:
         )
     else:
         result.outcomes.append(
-            __import__(
-                "xss_module.scanner.models", fromlist=["TestOutcome"]
-            ).TestOutcome(
+            TestOutcome(
                 status="no_finding",
                 url=login_url,
                 method="POST",

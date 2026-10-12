@@ -39,6 +39,9 @@ pip-delete-this-directory.txt
 # VulnSight local artifacts
 reports/
 findings*.json
+crawl_map.json
+**/lab.db
+target_app/lab.db
 .venv/
 venv/
 

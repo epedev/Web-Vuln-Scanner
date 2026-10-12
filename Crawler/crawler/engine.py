@@ -123,7 +123,10 @@ class CrawlerEngine:
                 )
 
             if "html" in content_type.lower() or body.lstrip()[:1] == "<":
-                soup = BeautifulSoup(body, "lxml")
+                try:
+                    soup = BeautifulSoup(body, "lxml")
+                except Exception:  # noqa: BLE001 — fall back when lxml unavailable
+                    soup = BeautifulSoup(body, "html.parser")
                 for a in soup.find_all("a", href=True):
                     href = _strip_fragment(urljoin(final, a["href"]))
                     page["links"].append(href)

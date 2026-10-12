@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vulnsight"
+version = "0.1.0"
+description = "Modular web vulnerability scanner with an integrated vulnerable Flask lab"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "VulnSight Team" },
+]
+keywords = ["security", "scanner", "xss", "sqli", "owasp", "education"]
+dependencies = [
+  "requests>=2.31.0",
+  "beautifulsoup4>=4.12.0",
+  "flask>=3.0.0",
+  "cvss>=3.0",
+  "jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+]
+browser = [
+  "playwright>=1.40.0",
+]
+pdf = [
+  "weasyprint>=60.0",
+]
+fastparse = [
+  "lxml>=5.0.0",
+]
+
+[project.scripts]
+vulnsight = "vulnsight.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["vulnsight*", "target_app*"]
+
+[tool.pytest.ini_options]
+testpaths = [
+  "tests",
+  "xss_module/tests",
+  "Crawler/tests",
+  "reporting_module/tests",
+  "sqli_&_command_module/tests",
+  "access_control_module/tests",
+]
+pythonpath = [
+  ".",
+  "xss_module",
+  "Crawler",
+  "reporting_module",
+  "sqli_&_command_module",
+  "access_control_module",
+]
+addopts = "-q"
+filterwarnings = [
+  "ignore::DeprecationWarning",
+]

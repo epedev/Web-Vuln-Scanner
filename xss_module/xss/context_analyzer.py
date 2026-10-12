@@ -276,7 +276,10 @@ def _classify_by_raw_scan(body: str, index: int, marker: str) -> ContextOccurren
 def _augment_with_bs4(body: str, marker: str, occurrences: list[ContextOccurrence]) -> None:
     """Cross-check with BeautifulSoup for comments and text nodes."""
     try:
-        soup = BeautifulSoup(body, "lxml")
+        try:
+            soup = BeautifulSoup(body, "lxml")
+        except Exception:  # noqa: BLE001
+            soup = BeautifulSoup(body, "html.parser")
     except Exception:
         return
 
