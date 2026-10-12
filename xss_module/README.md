@@ -18,11 +18,11 @@ cd xss_module
 python -m pip install -r requirements.txt
 ```
 
-## Run (lab)
+## Run (against the shared VulnSight lab)
 
 ```bash
-# Terminal A
-python fixtures/vulnerable_app/app.py
+# Terminal A — prepared vulnerable target (repo root)
+python target_app/app.py
 
 # Terminal B
 python xss_module.py \
@@ -32,6 +32,12 @@ python xss_module.py \
   --active-verify --metachar-probes --extended-probes \
   --enable-stored-xss \
   -o findings_xss.json -v
+```
+
+Or from the repository root with the full scanner:
+
+```bash
+vulnsight scan --project fixtures/sample_project.json
 ```
 
 ## Programmatic API
@@ -57,7 +63,7 @@ pytest -q
 
 - [XSS_MODULE.md](docs/XSS_MODULE.md)
 - [CRAWL_MAP_SCHEMA.md](docs/CRAWL_MAP_SCHEMA.md)
-- [Lab fixture](fixtures/vulnerable_app/README.md)
+- [Shared lab (`target_app`)](../target_app/README.md)
 
 ## Notes
 

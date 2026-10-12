@@ -69,19 +69,21 @@ Each finding includes: `id`, `vulnerability_type` (`xss.reflected` / `xss.stored
 ## Installation
 
 ```bash
-cd /home/kenabuggy/Projects/web_vuln
+cd xss_module
 python -m pip install -r requirements.txt
 # Optional browser verification:
 # python -m pip install playwright && playwright install chromium
 ```
 
-## Run against the lab fixture
+## Run against the shared VulnSight lab
+
+Use the prepared application in `target_app/` (not a module-local mock).
 
 ```bash
-# Terminal 1
-python fixtures/vulnerable_app/app.py
+# Terminal 1 (from repository root)
+python target_app/app.py
 
-# Terminal 2
+# Terminal 2 (from xss_module/)
 python xss_module.py \
   --crawl-map fixtures/sample_crawl_map.json \
   --origin http://127.0.0.1:5001 \
