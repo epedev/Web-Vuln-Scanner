@@ -12,6 +12,12 @@ from vulnsight import __version__
 from vulnsight.config import ALL_MODULES, ScanConfig
 from vulnsight.orchestrator import run_scan, validate_crawl_map_file
 from vulnsight.paths import MODULE_DIRS, REPO_ROOT, ensure_module_paths
+from vulnsight.project import (
+    REQUIRED_AUTH_PHRASE,
+    ProjectError,
+    load_project_file,
+    write_project_template,
+)
 from vulnsight.scope import ScopeError
 
 
@@ -63,7 +69,7 @@ def _cmd_doctor(_: argparse.Namespace) -> int:
     lab = MODULE_DIRS["target_app"] / "app.py"
     if lab.is_file():
         print(f"OK: lab app present ({lab})")
-        print("INFO: start lab with: python -m target_app.app   OR   python target_app/app.py")
+        print("INFO: start lab with: python target_app/app.py")
     else:
         print(f"FAIL: lab app missing at {lab}")
         ok = False
@@ -87,59 +93,140 @@ def _cmd_validate_input(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_init_project(args: argparse.Namespace) -> int:
+    try:
+        path = write_project_template(
+            args.output,
+            target=args.target,
+            project_name=args.name,
+            project_path=args.project_path,
+        )
+    except Exception as exc:  # noqa: BLE001
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print(f"wrote authorized project file: {path}")
+    print("Edit authorization.authorized_by, then run:")
+    print(f"  vulnsight scan --project {path}")
+    print(f'Required statement if included:\n  "{REQUIRED_AUTH_PHRASE}"')
+    return 0
+
+
 def _cmd_scan(args: argparse.Namespace) -> int:
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
-    modules = list(ALL_MODULES)
-    if args.modules:
-        modules = [m.strip() for m in args.modules.split(",") if m.strip()]
-    if args.skip_modules:
-        skip = {m.strip() for m in args.skip_modules.split(",") if m.strip()}
-        modules = [m for m in modules if m not in skip]
 
-    scope_label = (
-        "external (--allow-external)"
-        if args.allow_external
-        else "lab-loopback (127.0.0.1/localhost/::1)"
-    )
-    print("VulnSight scan")
-    print(f"  target:  {args.target}")
-    print(f"  scope:   {scope_label}")
-    print(f"  modules: {','.join(modules)}")
-    print(f"  output:  {args.output}")
-    if args.allow_external:
+    project = None
+    if args.project:
+        try:
+            project = load_project_file(args.project)
+        except ProjectError as exc:
+            print(f"project error: {exc}", file=sys.stderr)
+            return 2
+
+    if project is None and not args.target:
         print(
-            "  WARNING: external target mode enabled — use only with written authorization.",
+            "error: provide --project FILE or --target URL",
             file=sys.stderr,
         )
+        return 2
 
-    cfg = ScanConfig(
-        target=args.target,
-        output_dir=args.output,
-        modules=modules,
-        crawl_depth_pages=args.max_pages,
-        timeout=args.timeout,
-        max_requests=args.max_requests,
-        allow_external=args.allow_external,
-        allow_loopback=True,
-        verbose=args.verbose,
-        enable_stored_xss=not args.no_stored_xss,
-        enable_active_verify=not args.marker_only,
-        enable_metachar_probes=not args.marker_only,
-        enable_browser_verify=args.browser_verify,
-        formats=[f.strip() for f in args.format.split(",") if f.strip()],
-        crawl_map_path=args.crawl_map,
-        skip_recon=args.skip_recon or bool(args.crawl_map),
-    )
+    if project is not None:
+        cfg = project.to_scan_config(verbose=args.verbose)
+        if args.target:
+            cfg.target = args.target
+        if args.output_set:
+            cfg.output_dir = args.output
+        if args.modules:
+            cfg.modules = [m.strip() for m in args.modules.split(",") if m.strip()]
+        if args.max_pages_set:
+            cfg.crawl_depth_pages = args.max_pages
+        if args.timeout_set:
+            cfg.timeout = args.timeout
+        if args.max_requests_set:
+            cfg.max_requests = args.max_requests
+        if args.allow_external:
+            cfg.allow_external = True
+        if args.crawl_map:
+            cfg.crawl_map_path = args.crawl_map
+            cfg.skip_recon = True
+        if args.skip_recon:
+            cfg.skip_recon = True
+        if args.marker_only:
+            cfg.enable_active_verify = False
+            cfg.enable_metachar_probes = False
+        if args.no_stored_xss:
+            cfg.enable_stored_xss = False
+        if args.browser_verify:
+            cfg.enable_browser_verify = True
+        if args.format_set:
+            cfg.formats = [f.strip() for f in args.format.split(",") if f.strip()]
+
+        print("VulnSight authorized project scan")
+        print(f"  project: {project.project_name}")
+        print(f"  file:    {project.path}")
+        print(f"  target:  {cfg.target}")
+        print(f"  auth by: {project.authorized_by}")
+        if project.project_path:
+            print(f"  codebase: {project.project_path}")
+        print(f"  modules: {','.join(cfg.modules)}")
+        print(f"  output:  {cfg.output_dir}")
+    else:
+        modules = list(ALL_MODULES)
+        if args.modules:
+            modules = [m.strip() for m in args.modules.split(",") if m.strip()]
+        if args.skip_modules:
+            skip = {m.strip() for m in args.skip_modules.split(",") if m.strip()}
+            modules = [m for m in modules if m not in skip]
+
+        scope_label = (
+            "external (--allow-external)"
+            if args.allow_external
+            else "lab-loopback (127.0.0.1/localhost/::1)"
+        )
+        print("VulnSight scan")
+        print(f"  target:  {args.target}")
+        print(f"  scope:   {scope_label}")
+        print(f"  modules: {','.join(modules)}")
+        print(f"  output:  {args.output}")
+        if args.allow_external:
+            print(
+                "  WARNING: external target mode enabled — use only with written authorization.",
+                file=sys.stderr,
+            )
+
+        cfg = ScanConfig(
+            target=args.target,
+            output_dir=args.output,
+            modules=modules,
+            crawl_depth_pages=args.max_pages,
+            timeout=args.timeout,
+            max_requests=args.max_requests,
+            allow_external=args.allow_external,
+            allow_loopback=True,
+            verbose=args.verbose,
+            enable_stored_xss=not args.no_stored_xss,
+            enable_active_verify=not args.marker_only,
+            enable_metachar_probes=not args.marker_only,
+            enable_browser_verify=args.browser_verify,
+            formats=[f.strip() for f in args.format.split(",") if f.strip()],
+            crawl_map_path=args.crawl_map,
+            skip_recon=args.skip_recon or bool(args.crawl_map),
+        )
+
+    if args.skip_modules and project is not None:
+        skip = {m.strip() for m in args.skip_modules.split(",") if m.strip()}
+        cfg.modules = [m for m in cfg.modules if m not in skip]
+
     try:
         result = run_scan(cfg)
     except ScopeError as exc:
         print(f"scope error: {exc}", file=sys.stderr)
         print(
-            "hint: default lab mode allows only http://127.0.0.1, localhost, or ::1. "
-            "Use --allow-external only for authorized non-lab targets.",
+            "hint: use an authorized project file for local/private targets:\n"
+            "  vulnsight init-project -o myproject.json --target http://127.0.0.1:PORT\n"
+            "  vulnsight scan --project myproject.json",
             file=sys.stderr,
         )
         return 2
@@ -150,6 +237,12 @@ def _cmd_scan(args: argparse.Namespace) -> int:
     print("---")
     for line in result.summary_lines():
         print(line)
+    html = result.report_paths.get("html")
+    findings = result.report_paths.get("findings") or result.report_paths.get("json")
+    if html:
+        print(f"Open HTML report: {html}")
+    if findings:
+        print(f"Open JSON findings: {findings}")
     if result.exit_code != 0:
         print(
             "Scan finished with module failures (exit 1). "
@@ -190,8 +283,8 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="vulnsight",
         description=(
-            "VulnSight — modular web vulnerability scanner for authorized lab testing. "
-            "Default scope is loopback (127.0.0.1/localhost)."
+            "VulnSight — authorized modular web vulnerability scanner. "
+            "Typical flow: init-project → scan --project FILE → open HTML report."
         ),
     )
     sub = p.add_subparsers(dest="command", required=True)
@@ -206,8 +299,41 @@ def build_parser() -> argparse.ArgumentParser:
     vi.add_argument("--file", required=True, help="Path to crawl_map.json")
     vi.set_defaults(func=_cmd_validate_input)
 
-    s = sub.add_parser("scan", help="Run recon + detection + reporting against a target")
-    s.add_argument("--target", required=True, help="Target base URL (lab: http://127.0.0.1:5001)")
+    ip = sub.add_parser(
+        "init-project",
+        help="Create an authorized project JSON file for a local website under test",
+    )
+    ip.add_argument(
+        "-o",
+        "--output",
+        default="vulnsight-project.json",
+        help="Output project file path",
+    )
+    ip.add_argument(
+        "--target",
+        default="http://127.0.0.1:5001",
+        help="Website URL to authorize for scanning",
+    )
+    ip.add_argument("--name", default="authorized-local-target", help="Project name")
+    ip.add_argument(
+        "--project-path",
+        help="Optional local folder of the app under test (metadata only; not SAST)",
+    )
+    ip.set_defaults(func=_cmd_init_project)
+
+    s = sub.add_parser(
+        "scan",
+        help="Run all detection modules against an authorized target and write reports",
+    )
+    s.add_argument(
+        "--project",
+        "-p",
+        help="Authorized project JSON file (preferred). Create with: vulnsight init-project",
+    )
+    s.add_argument(
+        "--target",
+        help="Target base URL (optional when --project is set)",
+    )
     s.add_argument("--output", "-o", default="reports", help="Output directory")
     s.add_argument(
         "--modules",
@@ -244,8 +370,18 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv_list = list(sys.argv[1:] if argv is None else argv)
     parser = build_parser()
-    args = parser.parse_args(argv)
+    args = parser.parse_args(argv_list)
+
+    # Track whether the operator explicitly overrode defaults for project merges.
+    if getattr(args, "command", None) == "scan":
+        args.output_set = any(a in {"-o", "--output"} for a in argv_list)
+        args.max_pages_set = "--max-pages" in argv_list
+        args.timeout_set = "--timeout" in argv_list
+        args.max_requests_set = "--max-requests" in argv_list
+        args.format_set = "--format" in argv_list
+
     return int(args.func(args))
 
 

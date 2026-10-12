@@ -14,7 +14,19 @@ python target_app/app.py
 
 Stop with `Ctrl+C`. The lab binds loopback only by default.
 
-## Full scan
+## Authorized project scan (recommended)
+
+```bash
+# Create a project/authorization file for the local website under test
+vulnsight init-project -o myproject.json --target http://127.0.0.1:5001 --project-path ./target_app
+
+# Edit authorized_by, then run every module and generate reports
+vulnsight scan --project myproject.json
+```
+
+The project JSON is your authorization record + target configuration. It can also point at the local app folder via `project_path` (operator metadata; scanning still hits the live URL).
+
+## Direct URL scan (lab loopback)
 
 ```bash
 # Terminal B
