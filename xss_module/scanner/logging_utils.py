@@ -66,8 +66,9 @@ class RedactingFormatter(logging.Formatter):
 
 def setup_logger(name: str = "web_vuln", verbose: bool = False) -> logging.Logger:
     logger = logging.getLogger(name)
+    level = logging.DEBUG if verbose else logging.WARNING
     if logger.handlers:
-        logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+        logger.setLevel(level)
         return logger
 
     handler = logging.StreamHandler()
@@ -75,6 +76,6 @@ def setup_logger(name: str = "web_vuln", verbose: bool = False) -> logging.Logge
         RedactingFormatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
     )
     logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    logger.setLevel(level)
     logger.propagate = False
     return logger

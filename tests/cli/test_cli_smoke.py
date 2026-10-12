@@ -13,9 +13,10 @@ def test_version(capsys):
 
 
 def test_doctor(capsys):
-    code = main(["doctor"])
+    code = main(["--no-color", "doctor"])
     out = capsys.readouterr().out
-    assert "VulnSight doctor" in out
+    assert "V U L N S I G H T" in out
+    assert "RESULT: ready" in out or "RESULT: not ready" in out
     assert code in (0, 1)
 
 

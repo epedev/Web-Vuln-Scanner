@@ -19,81 +19,94 @@ from vulnsight.project import (
     write_project_template,
 )
 from vulnsight.scope import ScopeError
+from vulnsight.ui import Console
 
 
-def _cmd_version(_: argparse.Namespace) -> int:
-    print(__version__)
+def _console(args: argparse.Namespace) -> Console:
+    return Console(no_color=bool(getattr(args, "no_color", False)))
+
+
+def _cmd_version(args: argparse.Namespace) -> int:
+    ui = _console(args)
+    ui.banner(subtitle="version")
+    ui.status_info(__version__)
+    ui.print()
     return 0
 
 
-def _cmd_doctor(_: argparse.Namespace) -> int:
+def _cmd_doctor(args: argparse.Namespace) -> int:
+    ui = _console(args)
     ensure_module_paths()
-    print(f"VulnSight doctor — version {__version__}")
-    print(f"Python: {sys.version.split()[0]} ({sys.executable})")
-    print(f"Repo root: {REPO_ROOT}")
+    ui.render_doctor_header()
+    ui.status_info(f"Python {sys.version.split()[0]}  ({sys.executable})")
+    ui.status_info(f"Repo root  {REPO_ROOT}")
+    ui.print()
     ok = True
 
     if sys.version_info < (3, 10):
-        print("FAIL: Python 3.10+ required")
+        ui.status_fail("Python 3.10+ required")
         ok = False
     else:
-        print("OK: Python version")
+        ui.status_ok("Python version")
 
     for name, path in MODULE_DIRS.items():
         if path.is_dir():
-            print(f"OK: module dir {name} → {path}")
+            ui.status_ok(f"module dir {name}")
         else:
-            print(f"FAIL: missing module dir {name} → {path}")
+            ui.status_fail(f"missing module dir {name} → {path}")
             ok = False
 
     required = ["requests", "bs4", "flask", "jinja2", "cvss"]
     for pkg in required:
         try:
             __import__(pkg if pkg != "bs4" else "bs4")
-            print(f"OK: import {pkg}")
+            ui.status_ok(f"import {pkg}")
         except ImportError:
-            print(f"FAIL: missing package {pkg}")
+            ui.status_fail(f"missing package {pkg}")
             ok = False
 
     try:
         from xss.browser_verify import playwright_available
 
-        print(
-            "OK: playwright available"
-            if playwright_available()
-            else "INFO: playwright not installed (browser XSS verify optional)"
-        )
+        if playwright_available():
+            ui.status_ok("playwright available")
+        else:
+            ui.status_info("playwright not installed (browser XSS verify optional)")
     except Exception as exc:  # noqa: BLE001
-        print(f"INFO: browser verify check skipped ({exc})")
+        ui.status_info(f"browser verify check skipped ({exc})")
 
     lab = MODULE_DIRS["target_app"] / "app.py"
     if lab.is_file():
-        print(f"OK: lab app present ({lab})")
-        print("INFO: start lab with: python target_app/app.py")
+        ui.status_ok("lab app present")
+        ui.status_info("start lab: python target_app/app.py")
     else:
-        print(f"FAIL: lab app missing at {lab}")
+        ui.status_fail(f"lab app missing at {lab}")
         ok = False
 
-    print("RESULT:", "ready" if ok else "not ready")
+    ui.render_doctor_footer(ok)
     return 0 if ok else 1
 
 
 def _cmd_validate_input(args: argparse.Namespace) -> int:
+    ui = _console(args)
     try:
         errors = validate_crawl_map_file(args.file)
     except Exception as exc:  # noqa: BLE001
-        print(f"error: {exc}", file=sys.stderr)
+        ui.status_fail(str(exc))
         return 1
     if errors:
-        print("crawl_map validation failed:")
+        ui.status_fail("crawl_map validation failed")
         for e in errors:
-            print(f"  - {e}")
+            ui.hint(f"- {e}")
         return 1
-    print(f"OK: crawl map valid ({args.file})")
+    ui.banner(subtitle="crawl map validation")
+    ui.status_ok(f"crawl map valid ({args.file})")
+    ui.print()
     return 0
 
 
 def _cmd_init_project(args: argparse.Namespace) -> int:
+    ui = _console(args)
     try:
         path = write_project_template(
             args.output,
@@ -102,34 +115,47 @@ def _cmd_init_project(args: argparse.Namespace) -> int:
             project_path=args.project_path,
         )
     except Exception as exc:  # noqa: BLE001
-        print(f"error: {exc}", file=sys.stderr)
+        ui.status_fail(str(exc))
         return 1
-    print(f"wrote authorized project file: {path}")
-    print("Edit authorization.authorized_by, then run:")
-    print(f"  vulnsight scan --project {path}")
-    print(f'Required statement if included:\n  "{REQUIRED_AUTH_PHRASE}"')
+    ui.banner(subtitle="authorized project created")
+    ui.panel(
+        "NEXT STEPS",
+        [
+            ("file", str(path)),
+            ("edit", "authorization.authorized_by"),
+            ("scan", f"vulnsight scan --project {path}"),
+        ],
+    )
+    ui.print()
+    ui.status_info(f'statement: "{REQUIRED_AUTH_PHRASE}"')
+    ui.print()
     return 0
 
 
 def _cmd_scan(args: argparse.Namespace) -> int:
+    ui = _console(args)
+    log_level = logging.DEBUG if args.verbose else logging.ERROR
     logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
+        level=log_level,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        force=True,
     )
+    if not args.verbose:
+        # Keep the UI clean; module loggers often default to INFO.
+        logging.getLogger("web_vuln").setLevel(logging.ERROR)
+        logging.getLogger("vulnsight").setLevel(logging.ERROR)
+        logging.getLogger("urllib3").setLevel(logging.ERROR)
 
     project = None
     if args.project:
         try:
             project = load_project_file(args.project)
         except ProjectError as exc:
-            print(f"project error: {exc}", file=sys.stderr)
+            ui.status_fail(f"project error: {exc}")
             return 2
 
     if project is None and not args.target:
-        print(
-            "error: provide --project FILE or --target URL",
-            file=sys.stderr,
-        )
+        ui.status_fail("provide --project FILE or --target URL")
         return 2
 
     if project is not None:
@@ -162,16 +188,24 @@ def _cmd_scan(args: argparse.Namespace) -> int:
             cfg.enable_browser_verify = True
         if args.format_set:
             cfg.formats = [f.strip() for f in args.format.split(",") if f.strip()]
+        if args.skip_modules:
+            skip = {m.strip() for m in args.skip_modules.split(",") if m.strip()}
+            cfg.modules = [m for m in cfg.modules if m not in skip]
 
-        print("VulnSight authorized project scan")
-        print(f"  project: {project.project_name}")
-        print(f"  file:    {project.path}")
-        print(f"  target:  {cfg.target}")
-        print(f"  auth by: {project.authorized_by}")
-        if project.project_path:
-            print(f"  codebase: {project.project_path}")
-        print(f"  modules: {','.join(cfg.modules)}")
-        print(f"  output:  {cfg.output_dir}")
+        scope_label = (
+            "external-authorized"
+            if cfg.allow_external
+            else "lab-loopback (authorized project)"
+        )
+        ui.render_scan_header(
+            target=cfg.target,
+            scope=scope_label,
+            modules=cfg.modules,
+            output=cfg.output_dir,
+            project=project.project_name,
+            authorized_by=project.authorized_by,
+            codebase=project.project_path,
+        )
     else:
         modules = list(ALL_MODULES)
         if args.modules:
@@ -185,17 +219,17 @@ def _cmd_scan(args: argparse.Namespace) -> int:
             if args.allow_external
             else "lab-loopback (127.0.0.1/localhost/::1)"
         )
-        print("VulnSight scan")
-        print(f"  target:  {args.target}")
-        print(f"  scope:   {scope_label}")
-        print(f"  modules: {','.join(modules)}")
-        print(f"  output:  {args.output}")
         if args.allow_external:
-            print(
-                "  WARNING: external target mode enabled — use only with written authorization.",
-                file=sys.stderr,
+            ui.status_warn(
+                "external target mode enabled — use only with written authorization"
             )
 
+        ui.render_scan_header(
+            target=args.target,
+            scope=scope_label,
+            modules=modules,
+            output=args.output,
+        )
         cfg = ScanConfig(
             target=args.target,
             output_dir=args.output,
@@ -215,44 +249,26 @@ def _cmd_scan(args: argparse.Namespace) -> int:
             skip_recon=args.skip_recon or bool(args.crawl_map),
         )
 
-    if args.skip_modules and project is not None:
-        skip = {m.strip() for m in args.skip_modules.split(",") if m.strip()}
-        cfg.modules = [m for m in cfg.modules if m not in skip]
-
     try:
         result = run_scan(cfg)
     except ScopeError as exc:
-        print(f"scope error: {exc}", file=sys.stderr)
-        print(
-            "hint: use an authorized project file for local/private targets:\n"
+        ui.status_fail(f"scope error: {exc}")
+        ui.hint(
+            "use an authorized project file for local/private targets:\n"
             "  vulnsight init-project -o myproject.json --target http://127.0.0.1:PORT\n"
-            "  vulnsight scan --project myproject.json",
-            file=sys.stderr,
+            "  vulnsight scan --project myproject.json"
         )
         return 2
     except Exception as exc:  # noqa: BLE001
-        print(f"error: {exc}", file=sys.stderr)
+        ui.status_fail(str(exc))
         return 1
 
-    print("---")
-    for line in result.summary_lines():
-        print(line)
-    html = result.report_paths.get("html")
-    findings = result.report_paths.get("findings") or result.report_paths.get("json")
-    if html:
-        print(f"Open HTML report: {html}")
-    if findings:
-        print(f"Open JSON findings: {findings}")
-    if result.exit_code != 0:
-        print(
-            "Scan finished with module failures (exit 1). "
-            "Findings from successful modules were still written when available.",
-            file=sys.stderr,
-        )
+    ui.render_scan_result(result)
     return result.exit_code
 
 
 def _cmd_report(args: argparse.Namespace) -> int:
+    ui = _console(args)
     ensure_module_paths()
     from report_module import run_report_module
 
@@ -262,10 +278,11 @@ def _cmd_report(args: argparse.Namespace) -> int:
     elif isinstance(data, list):
         findings = data
     else:
-        print("error: input must be a findings list or object with findings[]", file=sys.stderr)
+        ui.status_fail("input must be a findings list or object with findings[]")
         return 1
 
     formats = [f.strip() for f in args.format.split(",") if f.strip()]
+    ui.banner(subtitle="report generation")
     result = run_report_module(
         findings_objects=findings,
         output_dir=args.output,
@@ -275,7 +292,8 @@ def _cmd_report(args: argparse.Namespace) -> int:
         scanner_version=__version__,
     )
     for kind, path in (result.outputs or {}).items():
-        print(f"{kind}: {path}")
+        ui.status_ok(f"{kind}: {path}")
+    ui.print()
     return 0
 
 
@@ -286,21 +304,43 @@ def build_parser() -> argparse.ArgumentParser:
             "VulnSight — authorized modular web vulnerability scanner. "
             "Typical flow: init-project → scan --project FILE → open HTML report."
         ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "UI tip: colors auto-disable when piped or when NO_COLOR=1 / --no-color is set."
+        ),
+    )
+    color_parent = argparse.ArgumentParser(add_help=False)
+    color_parent.add_argument(
+        "--no-color",
+        action="store_true",
+        help="Disable ANSI colors (also respects NO_COLOR)",
+    )
+    p.add_argument(
+        "--no-color",
+        action="store_true",
+        help="Disable ANSI colors (also respects NO_COLOR)",
     )
     sub = p.add_subparsers(dest="command", required=True)
 
-    v = sub.add_parser("version", help="Print scanner version")
+    v = sub.add_parser("version", parents=[color_parent], help="Print scanner version")
     v.set_defaults(func=_cmd_version)
 
-    d = sub.add_parser("doctor", help="Check environment and lab readiness")
+    d = sub.add_parser(
+        "doctor", parents=[color_parent], help="Check environment and lab readiness"
+    )
     d.set_defaults(func=_cmd_doctor)
 
-    vi = sub.add_parser("validate-input", help="Validate a crawl_map.json file")
+    vi = sub.add_parser(
+        "validate-input",
+        parents=[color_parent],
+        help="Validate a crawl_map.json file",
+    )
     vi.add_argument("--file", required=True, help="Path to crawl_map.json")
     vi.set_defaults(func=_cmd_validate_input)
 
     ip = sub.add_parser(
         "init-project",
+        parents=[color_parent],
         help="Create an authorized project JSON file for a local website under test",
     )
     ip.add_argument(
@@ -323,6 +363,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser(
         "scan",
+        parents=[color_parent],
         help="Run all detection modules against an authorized target and write reports",
     )
     s.add_argument(
@@ -358,7 +399,9 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("-v", "--verbose", action="store_true")
     s.set_defaults(func=_cmd_scan)
 
-    r = sub.add_parser("report", help="Generate reports from findings JSON")
+    r = sub.add_parser(
+        "report", parents=[color_parent], help="Generate reports from findings JSON"
+    )
     r.add_argument("--input", "-i", required=True, help="findings.json or module ScanResult JSON")
     r.add_argument("--output", "-o", default="reports")
     r.add_argument("--format", default="html,json")
@@ -371,10 +414,17 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     argv_list = list(sys.argv[1:] if argv is None else argv)
+    # Allow `vulnsight --no-color <cmd>` by moving global flag onto the subcommand.
+    if "--no-color" in argv_list:
+        idx = argv_list.index("--no-color")
+        # Keep one copy; argparse parents accept it on the subcommand.
+        if idx == 0 and len(argv_list) > 1:
+            cmd = argv_list[1]
+            rest = argv_list[2:]
+            argv_list = [cmd, "--no-color", *rest]
     parser = build_parser()
     args = parser.parse_args(argv_list)
 
-    # Track whether the operator explicitly overrode defaults for project merges.
     if getattr(args, "command", None) == "scan":
         args.output_set = any(a in {"-o", "--output"} for a in argv_list)
         args.max_pages_set = "--max-pages" in argv_list
