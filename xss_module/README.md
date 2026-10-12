@@ -4,11 +4,11 @@ Cybersecurity graduation project — authorized / lab-only scanning toolkit.
 
 ## Status
 
-The repository started empty. This baseline includes:
+This package is the **XSS detection module**. It consumes `crawl_map.json` from an
+external Recon module (not bundled here).
 
-- **Recon** (`recon/`) — produces `crawl_map.json` (schema v1.0)
 - **XSS module** (`xss/`, entry `xss_module.py`) — reflected + stored detection
-- **Main scanner** (`scanner/main.py`) — module orchestration
+- **Shared helpers** (`scanner/`) — finding models / logging used by XSS
 - **Lab fixture** (`fixtures/vulnerable_app/`) — intentional XSS training target
 - **Tests** (`tests/`) — unit + mocked integration coverage
 

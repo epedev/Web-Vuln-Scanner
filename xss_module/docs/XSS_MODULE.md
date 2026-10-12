@@ -118,7 +118,7 @@ pytest -q
 
 - DOM-based XSS is **not** implemented in the core pipeline.
 - Browser verification is optional and GET-oriented for execution checks.
-- Stored XSS requires `renders_to` relationships from Recon; missing links are reported as limitations, not “safe”.
+- Stored XSS requires `renders_to` relationships from the external crawl map / Recon output; missing links are reported as limitations, not “safe”.
 - Absence of reflection ≠ proof of safety.
 - Framework-specific sinks, mXSS, mutation XSS, and complex template contexts are out of scope.
 - Multipart file uploads and JSON API bodies are not fully tested injection surfaces.

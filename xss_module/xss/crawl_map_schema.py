@@ -1,7 +1,7 @@
-"""Canonical crawl_map.json schema produced by the Recon module.
+"""crawl_map.json validation for the XSS module input contract.
 
-This schema is the integration contract for XSS and future detection modules.
-Established as the project baseline because the repository had no prior schema.
+The XSS module consumes crawl maps produced by an external Recon module.
+This file only validates/consumes that schema; it does not implement crawling.
 """
 
 from __future__ import annotations
@@ -9,49 +9,6 @@ from __future__ import annotations
 from typing import Any
 
 CRAWL_MAP_VERSION = "1.0"
-
-# Example shape (documented; not enforced as JSON Schema library dependency):
-#
-# {
-#   "version": "1.0",
-#   "target": "http://127.0.0.1:5001",
-#   "generated_at": "2026-10-11T18:00:00+00:00",
-#   "pages": [
-#     {
-#       "url": "http://127.0.0.1:5001/search",
-#       "method": "GET",
-#       "status": 200,
-#       "content_type": "text/html",
-#       "params": [
-#         {"name": "q", "value": "test", "source": "query", "input_type": "text"}
-#       ],
-#       "forms": [],
-#       "links": [],
-#       "renders_from": []
-#     }
-#   ],
-#   "forms": [
-#     {
-#       "action": "http://127.0.0.1:5001/comment",
-#       "method": "POST",
-#       "enctype": "application/x-www-form-urlencoded",
-#       "fields": [
-#         {"name": "body", "value": "", "input_type": "text", "required": false},
-#         {"name": "submit", "value": "Post", "input_type": "submit", "required": false}
-#       ],
-#       "source_page": "http://127.0.0.1:5001/comment",
-#       "renders_to": ["http://127.0.0.1:5001/comments"]
-#     }
-#   ],
-#   "endpoints": [
-#     {
-#       "url": "http://127.0.0.1:5001/search",
-#       "method": "GET",
-#       "params": [{"name": "q", "value": "", "source": "query", "input_type": "text"}]
-#     }
-#   ]
-# }
-
 
 REQUIRED_TOP_LEVEL = {"version", "target", "pages"}
 

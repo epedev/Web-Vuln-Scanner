@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse, urlunparse
 
-from recon.schema import validate_crawl_map
+from xss.crawl_map_schema import validate_crawl_map
 
 logger = logging.getLogger("web_vuln.xss.input")
 

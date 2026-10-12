@@ -1,9 +1,8 @@
 # crawl_map.json Schema (v1.0)
 
-Integration contract between the Recon module and detection modules (XSS first).
-
-> **Repository note:** When this project was initialized, `web_vuln/` was empty.
-> This schema is the project baseline established for modular integration.
+Input contract consumed by the XSS module. Crawl maps are produced by an
+**external Recon module** (not included in this package). XSS only validates and
+reads this format.
 
 ## Top-level
 
