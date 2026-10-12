@@ -36,6 +36,12 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
+# VulnSight local artifacts
+reports/
+findings*.json
+.venv/
+venv/
+
 # Unit test / coverage reports
 htmlcov/
 .tox/
