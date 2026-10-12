@@ -1,0 +1,5 @@
+cvss>=3.0
+jinja2>=3.1
+# Optional PDF (HTML-to-PDF)
+# weasyprint>=60.0
+pytest>=8.0

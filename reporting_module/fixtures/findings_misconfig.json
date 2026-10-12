@@ -1,0 +1,69 @@
+{
+  "module": "misconfig",
+  "schema_version": "1.0",
+  "findings": [
+    {
+      "id": "misc-1",
+      "vulnerability_type": "security_misconfiguration",
+      "title": "Missing Content-Security-Policy header",
+      "url": "http://127.0.0.1:5001/",
+      "method": "GET",
+      "parameter": null,
+      "location": "http_response_header",
+      "evidence": {
+        "missing_header": "Content-Security-Policy"
+      },
+      "confidence": "high",
+      "severity": "low",
+      "verification_status": "confirmed",
+      "cwe": "CWE-693",
+      "owasp": "A05:2021-Security Misconfiguration",
+      "description": "The application response does not include a Content-Security-Policy header.",
+      "impact": "Browser-side injection impact may be higher without CSP defense-in-depth.",
+      "remediation": "Deploy a strict Content-Security-Policy tailored to application needs.",
+      "timestamp": "2026-10-11T18:15:00+00:00",
+      "module": "misconfig"
+    },
+    {
+      "id": "misc-unscored",
+      "vulnerability_type": "unknown_issue_type_xyz",
+      "title": "Finding missing CVSS metrics",
+      "url": "http://127.0.0.1:5001/admin",
+      "method": "GET",
+      "description": "Synthetic finding with no justified CVSS metrics.",
+      "impact": "Unknown.",
+      "remediation": "Needs analyst review.",
+      "severity": "info",
+      "confidence": "low",
+      "verification_status": "inconclusive",
+      "evidence": {},
+      "timestamp": "2026-10-11T18:16:00+00:00",
+      "module": "misconfig"
+    },
+    {
+      "id": "misc-dup",
+      "vulnerability_type": "security_misconfiguration",
+      "title": "Missing Content-Security-Policy header (duplicate report)",
+      "url": "http://127.0.0.1:5001/",
+      "method": "GET",
+      "location": "http_response_header",
+      "evidence": {
+        "missing_header": "Content-Security-Policy",
+        "reported_by": "second-pass"
+      },
+      "confidence": "high",
+      "severity": "low",
+      "verification_status": "confirmed",
+      "cwe": "CWE-693",
+      "owasp": "A05:2021-Security Misconfiguration",
+      "description": "Duplicate of misc-1 from another reporter.",
+      "impact": "Same as primary CSP finding.",
+      "remediation": "Deploy a strict Content-Security-Policy.",
+      "timestamp": "2026-10-11T18:17:00+00:00",
+      "module": "misconfig"
+    }
+  ],
+  "limitations": [
+    "SYNTHETIC FIXTURE — not results from a real assessment."
+  ]
+}

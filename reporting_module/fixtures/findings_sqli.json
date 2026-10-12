@@ -1,0 +1,58 @@
+{
+  "module": "sqli",
+  "findings": [
+    {
+      "id": "sqli-1",
+      "vulnerability_type": "SQL Injection",
+      "title": "Possible error-based SQL injection",
+      "url": "http://127.0.0.1:5000/login",
+      "method": "POST",
+      "parameter": "username",
+      "input_type": "form",
+      "context": "Database error in HTTP response",
+      "payload_or_probe_id": "'",
+      "evidence": {
+        "matched_signatures": ["sqlite3.OperationalError"]
+      },
+      "detection_method": "error_signature",
+      "confidence": "medium",
+      "severity": "high",
+      "verification_status": "candidate",
+      "http_status": 500,
+      "cwe": "CWE-89",
+      "owasp": "A03:2021-Injection",
+      "description": "The response contains a database error signature.",
+      "impact": "Database details may be exposed; injection may be possible.",
+      "remediation": "Use parameterized queries and avoid returning database errors to clients.",
+      "timestamp": "2026-10-11T18:10:00+00:00",
+      "module": "sqli"
+    },
+    {
+      "id": "sqli-dup-xss-url",
+      "vulnerability_type": "SQL Injection",
+      "title": "Duplicate-style SQLi on shared URL class demo",
+      "url": "http://127.0.0.1:5001/reflect",
+      "method": "GET",
+      "parameter": "q",
+      "input_type": "query",
+      "context": "sql",
+      "payload_or_probe_id": "1 OR 1=1",
+      "evidence": {"note": "synthetic distinct class from XSS on same URL/param"},
+      "detection_method": "synthetic",
+      "confidence": "low",
+      "severity": "high",
+      "verification_status": "candidate",
+      "cwe": "CWE-89",
+      "owasp": "A03:2021-Injection",
+      "description": "Synthetic SQLi on same endpoint as XSS to prove classes do not merge.",
+      "impact": "Unauthorized data access if exploitable.",
+      "remediation": "Use parameterized queries.",
+      "timestamp": "2026-10-11T18:11:00+00:00",
+      "module": "sqli"
+    }
+  ],
+  "outcomes": [],
+  "limitations": [
+    "Database error signatures are indicators, not proof of exploitability."
+  ]
+}

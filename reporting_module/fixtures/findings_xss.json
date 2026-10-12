@@ -1,0 +1,76 @@
+{
+  "module": "xss",
+  "findings": [
+    {
+      "id": "xss-reflected-1",
+      "vulnerability_type": "xss.reflected",
+      "title": "Reflected XSS candidate in parameter 'q'",
+      "url": "http://127.0.0.1:5001/reflect?q=test",
+      "method": "GET",
+      "parameter": "q",
+      "input_type": "text",
+      "context": "html_body",
+      "payload_or_probe_id": "zzXSSDemo01",
+      "evidence": {
+        "marker": "zzXSSDemo01",
+        "metachar_raw": true,
+        "Authorization": "Bearer super-secret-token"
+      },
+      "detection_method": "marker_plus_context_probe",
+      "confidence": "high",
+      "severity": "medium",
+      "verification_status": "probable",
+      "http_status": 200,
+      "cwe": "CWE-79",
+      "owasp": "A03:2021-Injection",
+      "description": "Parameter q reflects attacker-controlled input in HTML body context.",
+      "impact": "Script execution in victim browser if exploitable.",
+      "remediation": "HTML-encode untrusted output in body context.",
+      "references": ["https://cwe.mitre.org/data/definitions/79.html"],
+      "timestamp": "2026-10-11T18:00:00+00:00",
+      "module": "xss"
+    },
+    {
+      "id": "xss-stored-1",
+      "vulnerability_type": "xss.stored",
+      "title": "Stored XSS candidate via 'body'",
+      "url": "http://127.0.0.1:5001/comment",
+      "method": "POST",
+      "parameter": "body",
+      "input_type": "textarea",
+      "context": "html_body",
+      "payload_or_probe_id": "zzSXSSDemo02",
+      "evidence": {
+        "submission_url": "http://127.0.0.1:5001/comment",
+        "render_url": "http://127.0.0.1:5001/comments",
+        "marker": "zzSXSSDemo02"
+      },
+      "detection_method": "stored_submit_and_retrieve",
+      "confidence": "medium",
+      "severity": "low",
+      "verification_status": "candidate",
+      "http_status": 200,
+      "cwe": "CWE-79",
+      "owasp": "A03:2021-Injection",
+      "description": "Stored marker submitted via body later observed on comments page.",
+      "impact": "Persistent script may execute for viewers of the rendering page.",
+      "remediation": "Encode stored content on output; sanitize on input where appropriate.",
+      "timestamp": "2026-10-11T18:05:00+00:00",
+      "module": "xss"
+    }
+  ],
+  "outcomes": [
+    {
+      "status": "inconclusive",
+      "url": "http://127.0.0.1:5001/slow",
+      "method": "GET",
+      "parameter": "q",
+      "reason": "timeout"
+    }
+  ],
+  "limitations": [
+    "DOM-based XSS is not covered by this core pipeline."
+  ],
+  "stats": {},
+  "errors": []
+}

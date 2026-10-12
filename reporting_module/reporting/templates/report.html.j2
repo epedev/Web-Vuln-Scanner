@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ metadata.report_title }} — VulnSight</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --ink: #14212b;
+      --muted: #5b6b76;
+      --line: #d7dee5;
+      --brand: #0b3d4a;
+      --accent: #1f7a6c;
+      --critical: #8b1e1e;
+      --high: #c2410c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #e8eef2 0%, var(--bg) 220px);
+      line-height: 1.5;
+    }
+    a { color: var(--accent); }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    header.cover {
+      background: var(--brand);
+      color: #f5fafb;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    header.cover h1 { margin: 0 0 0.35rem; font-size: 1.8rem; letter-spacing: 0.02em; }
+    header.cover .product { font-size: 0.95rem; opacity: 0.9; margin-bottom: 1rem; }
+    .meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+    .meta div { background: rgba(255,255,255,0.08); border-radius: 8px; padding: 0.65rem 0.8rem; }
+    .meta dt { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.8; }
+    .meta dd { margin: 0.15rem 0 0; font-weight: 600; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1.25rem 1.4rem;
+      margin-bottom: 1.25rem;
+    }
+    h2 { margin-top: 0; color: var(--brand); font-size: 1.25rem; }
+    h3 { margin-bottom: 0.35rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.85rem;
+      background: #fbfcfd;
+    }
+    .card .num { font-size: 1.6rem; font-weight: 700; color: var(--brand); }
+    .card .lbl { color: var(--muted); font-size: 0.85rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    th, td { border-bottom: 1px solid var(--line); padding: 0.55rem 0.4rem; text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    .badge {
+      display: inline-block;
+      min-width: 4.2rem;
+      text-align: center;
+      border-radius: 999px;
+      padding: 0.15rem 0.55rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+    }
+    .sev-critical { background: #8b1e1e; }
+    .sev-high { background: #c2410c; }
+    .sev-medium { background: #b45309; }
+    .sev-low { background: #1d4ed8; }
+    .sev-info, .sev-none { background: #475569; }
+    .finding { border-top: 1px solid var(--line); padding-top: 1rem; margin-top: 1rem; }
+    .finding:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
+    .muted { color: var(--muted); }
+    pre, code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.85rem;
+    }
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 0.85rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    ul.compact { margin: 0.4rem 0; padding-left: 1.2rem; }
+    .notice {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      border-radius: 8px;
+      padding: 0.75rem 0.9rem;
+      margin-bottom: 1rem;
+    }
+    footer { color: var(--muted); font-size: 0.85rem; margin-top: 1rem; }
+    @media print {
+      body { background: #fff; }
+      header.cover { break-inside: avoid; }
+      section { break-inside: avoid; border: 0; padding: 0; margin-bottom: 1.5rem; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="cover">
+      <div class="product">VulnSight — Intelligent Web Vulnerability Scanner</div>
+      <h1>{{ metadata.report_title }}</h1>
+      <div class="meta">
+        <div><dt>Target</dt><dd>{{ metadata.target }}</dd></div>
+        <div><dt>Authorized origin</dt><dd>{{ metadata.authorized_origin }}</dd></div>
+        <div><dt>Assessment date</dt><dd>{{ metadata.assessment_date }}</dd></div>
+        <div><dt>Generated (UTC)</dt><dd>{{ metadata.generated_at }}</dd></div>
+        <div><dt>Scan ID</dt><dd>{{ metadata.scan_id }}</dd></div>
+        <div><dt>Scanner version</dt><dd>{{ metadata.scanner_version }}</dd></div>
+      </div>
+    </header>
+
+    {% if incomplete %}
+    <div class="notice" role="status">
+      <strong>Incomplete assessment:</strong> one or more inputs failed validation or listed modules were not executed.
+      Do not treat this report as a complete security assessment.
+    </div>
+    {% endif %}
+
+    <section id="executive-summary">
+      <h2>Executive summary</h2>
+      <div class="cards">
+        <div class="card"><div class="num">{{ summary.total_unique_findings }}</div><div class="lbl">Unique findings</div></div>
+        <div class="card"><div class="num">{{ summary.highest_cvss_score if summary.highest_cvss_score is not none else '—' }}</div><div class="lbl">Highest CVSS</div></div>
+        <div class="card"><div class="num">{{ summary.by_verification_status.get('confirmed', 0) }}</div><div class="lbl">Confirmed</div></div>
+        <div class="card"><div class="num">{{ summary.by_verification_status.get('probable', 0) }}</div><div class="lbl">Probable</div></div>
+        <div class="card"><div class="num">{{ summary.by_verification_status.get('candidate', 0) }}</div><div class="lbl">Candidates</div></div>
+        <div class="card"><div class="num">{{ summary.unscored_findings }}</div><div class="lbl">Unscored</div></div>
+      </div>
+      <h3>Severity counts</h3>
+      <ul class="compact">
+        {% for sev, count in summary.by_severity.items() %}
+        <li>{{ sev }}: {{ count }}</li>
+        {% else %}
+        <li class="muted">No findings.</li>
+        {% endfor %}
+      </ul>
+      <h3>By source module</h3>
+      <ul class="compact">
+        {% for mod, count in summary.by_source_module.items() %}
+        <li>{{ mod }}: {{ count }}</li>
+        {% endfor %}
+      </ul>
+      <h3>Major observations</h3>
+      <ul class="compact">
+        {% for obs in summary.major_observations %}
+        <li>{{ obs }}</li>
+        {% else %}
+        <li class="muted">No major observations.</li>
+        {% endfor %}
+      </ul>
+      <p class="muted">Scope: {{ metadata.scope }}</p>
+    </section>
+
+    <section id="findings-overview">
+      <h2>Findings overview</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Severity</th>
+            <th>CVSS</th>
+            <th>Verification</th>
+            <th>URL</th>
+            <th>Param</th>
+            <th>CWE</th>
+            <th>OWASP</th>
+            <th>Module</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in findings %}
+          <tr>
+            <td><a href="#finding-{{ f.id }}">{{ f.id[:8] }}</a></td>
+            <td>{{ f.title }}</td>
+            <td><span class="badge sev-{{ f.severity }}">{{ f.severity }}</span></td>
+            <td>{% if f.cvss_base_score is not none %}{{ '%.1f'|format(f.cvss_base_score) }}{% else %}—{% endif %}</td>
+            <td>{{ f.verification_status }}</td>
+            <td>{{ f.url }}</td>
+            <td>{{ f.parameter or '—' }}</td>
+            <td>{{ f.cwe or '—' }}</td>
+            <td>{{ f.owasp or '—' }}</td>
+            <td>{{ f.source_module }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="10" class="muted">No findings to display.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section id="detailed-findings">
+      <h2>Detailed findings</h2>
+      {% for f in findings %}
+      <article class="finding" id="finding-{{ f.id }}">
+        <h3>{{ f.title }}</h3>
+        <p>
+          <span class="badge sev-{{ f.severity }}">{{ f.severity }}</span>
+          {% if f.cvss_base_score is not none %}
+          CVSS {{ f.cvss_version }} {{ '%.1f'|format(f.cvss_base_score) }} ({{ f.cvss_severity }})
+          {% else %}
+          <span class="muted">CVSS unscored ({{ f.cvss_status }})</span>
+          {% endif %}
+          · {{ f.verification_status }} · confidence {{ f.confidence }}
+          · priority {{ f.operational_priority or 'n/a' }}
+        </p>
+        <p><strong>Endpoint:</strong> {{ f.method }} {{ f.url }}
+          {% if f.parameter %} · <strong>Parameter:</strong> {{ f.parameter }}{% endif %}
+          {% if f.location %} · <strong>Location:</strong> {{ f.location }}{% endif %}
+        </p>
+        {% if f.cvss_vector %}
+        <p><strong>CVSS vector:</strong> <code>{{ f.cvss_vector }}</code>
+          <span class="muted">({{ f.cvss_provenance }})</span></p>
+        {% endif %}
+        <p><strong>Description:</strong> {{ f.description }}</p>
+        <p><strong>Impact:</strong> {{ f.impact }}</p>
+        <p><strong>Remediation:</strong> {{ f.remediation }}</p>
+        <p><strong>Classification:</strong> {{ f.cwe or 'n/a' }} · {{ f.owasp or 'n/a' }}</p>
+        <p><strong>Source:</strong> module={{ f.source_module }}
+          · files={{ f.source_files|join(', ') }}
+          · source_ids={{ f.source_ids|join(', ') or 'n/a' }}</p>
+        <p><strong>Evidence</strong> (escaped text; not executed):</p>
+        <pre>{{ f.evidence | tojson(indent=2) }}</pre>
+        {% if f.references %}
+        <p><strong>References:</strong></p>
+        <ul class="compact">
+          {% for ref in f.references %}<li>{{ ref }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+      </article>
+      {% else %}
+      <p class="muted">No detailed findings.</p>
+      {% endfor %}
+    </section>
+
+    <section id="methodology">
+      <h2>Methodology and limitations</h2>
+      <p>This report was generated by the VulnSight reporting engine. Findings were ingested from scanner modules, normalized into schema {{ metadata.schema_version }}, deduplicated conservatively, and scored with CVSS v3.1 where a complete base vector was available or an explicitly analyst-assessed suggestion was applied.</p>
+      <p><strong>Modules executed:</strong> {{ modules_executed|join(', ') or 'none' }}</p>
+      <p><strong>Modules not executed:</strong> {{ modules_not_executed|join(', ') or 'none' }}</p>
+      <p class="muted">A module that was not executed is not reported as having zero vulnerabilities.</p>
+      <h3>Limitations</h3>
+      <ul class="compact">
+        {% for item in limitations %}
+        <li>{{ item }}</li>
+        {% else %}
+        <li class="muted">No additional limitations recorded.</li>
+        {% endfor %}
+      </ul>
+      <h3>Validation issues</h3>
+      <ul class="compact">
+        {% for issue in issues %}
+        <li>[{{ issue.level }}] {{ issue.source }}: {{ issue.message }}</li>
+        {% else %}
+        <li class="muted">No validation issues.</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <footer>
+      Generated by VulnSight reporting module · timestamps in UTC · treat all evidence as untrusted data.
+    </footer>
+  </div>
+</body>
+</html>
