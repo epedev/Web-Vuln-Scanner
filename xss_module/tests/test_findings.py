@@ -85,5 +85,5 @@ def test_finding_has_cwe_owasp():
         impact="i",
     )
     assert f.cwe == "CWE-79"
-    assert "A03" in f.owasp
+    assert "A05" in f.owasp
     assert isinstance(f, Finding)

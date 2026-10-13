@@ -80,9 +80,14 @@ def render_markdown(result: ReportResult) -> str:
 
     owasp = summary.get("owasp_top10") or {}
     if owasp:
-        lines.append("## OWASP Top 10:2021 coverage")
+        lines.append("## OWASP Top 10:2025 coverage")
         lines.append("")
-        lines.append(f"**Standard:** {owasp.get('standard', 'OWASP Top 10:2021')}")
+        std = owasp.get("standard", "OWASP Top 10:2025")
+        window = owasp.get("edition_window")
+        lines.append(
+            f"**Standard:** {std}"
+            + (f" ({window} cycle)" if window else "")
+        )
         lines.append("")
         lines.append(
             f"Categories with findings: "
@@ -110,6 +115,29 @@ def render_markdown(result: ReportResult) -> str:
                 + " |"
             )
         lines.append("")
+        legacy = owasp.get("legacy_2021") or {}
+        if legacy.get("categories"):
+            lines.append("### Legacy OWASP Top 10:2021 continuity")
+            lines.append("")
+            if legacy.get("note"):
+                lines.append(f"> {_md_escape(str(legacy['note']))}")
+                lines.append("")
+            lines.append("| ID | Category | Findings | Status |")
+            lines.append("| --- | --- | --- | --- |")
+            for row in legacy.get("categories") or []:
+                lines.append(
+                    "| "
+                    + " | ".join(
+                        [
+                            row.get("id", ""),
+                            _md_escape(str(row.get("name", ""))),
+                            str(row.get("findings", 0)),
+                            str(row.get("status", "")).replace("_", " "),
+                        ]
+                    )
+                    + " |"
+                )
+            lines.append("")
 
     lines.append("## Findings overview")
     lines.append("")

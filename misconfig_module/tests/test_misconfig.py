@@ -13,6 +13,8 @@ class TestMisconfig(unittest.TestCase):
         resp = Mock()
         resp.url = "http://127.0.0.1:5000/"
         resp.headers = {"Content-Type": "text/html"}
+        resp.text = "<html></html>"
+        resp.status_code = 200
         resp.raw.headers.getlist = Mock(return_value=[])
         client.get.return_value = resp
 
@@ -34,6 +36,8 @@ class TestMisconfig(unittest.TestCase):
             "X-Frame-Options": "DENY",
             "Referrer-Policy": "no-referrer",
         }
+        resp.text = "<html></html>"
+        resp.status_code = 200
         resp.raw.headers.getlist = Mock(return_value=[])
         client.get.return_value = resp
 
@@ -64,13 +68,19 @@ class TestMisconfig(unittest.TestCase):
             "X-Frame-Options": "DENY",
             "Referrer-Policy": "no-referrer",
         }
+        home.text = "<html></html>"
+        home.status_code = 200
         home.raw.headers.getlist = Mock(return_value=[])
         redir = Mock()
         redir.status_code = 302
+        redir.text = ""
         redir.headers = {
             "Location": "https://example.invalid/vulnsight-redirect-probe"
         }
-        client.get.side_effect = [home, redir]
+        err = Mock()
+        err.status_code = 404
+        err.text = "Not Found"
+        client.get.side_effect = [home, redir, err]
 
         crawl = {
             "forms": [],
@@ -101,6 +111,8 @@ class TestMisconfig(unittest.TestCase):
             "Server": "Werkzeug/3.0.0 Python/3.12",
             "X-Powered-By": "DemoLab",
         }
+        resp.text = "<html></html>"
+        resp.status_code = 200
         resp.raw.headers.getlist = Mock(return_value=[])
         client.get.return_value = resp
         crawl = {
@@ -122,8 +134,8 @@ class TestMisconfig(unittest.TestCase):
         self.assertTrue(any("Technology disclosure" in t for t in titles))
         self.assertTrue(any("cleartext HTTP" in t for t in titles))
         owasps = {f.owasp for f in result.findings}
-        self.assertTrue(any(o and o.startswith("A06") for o in owasps))
-        self.assertTrue(any(o and o.startswith("A02") for o in owasps))
+        self.assertTrue(any(o and o.startswith("A03:2025") for o in owasps))
+        self.assertTrue(any(o and o.startswith("A04:2025") for o in owasps))
 
     @patch("misconfig.detector.requests.Session")
     def test_ssrf_candidate_signal(self, mock_session):
@@ -145,7 +157,12 @@ class TestMisconfig(unittest.TestCase):
         test = Mock()
         test.status_code = 200
         test.text = "Failed to connect to 127.0.0.1:9 (vulnsight-ssrf-probe)"
-        client.get.side_effect = [home, baseline, test]
+        home.text = "<html></html>"
+        home.status_code = 200
+        err = Mock()
+        err.status_code = 404
+        err.text = "Not Found"
+        client.get.side_effect = [home, baseline, test, err]
         crawl = {
             "forms": [],
             "pages": [
@@ -160,7 +177,7 @@ class TestMisconfig(unittest.TestCase):
         result = check_local_target("http://127.0.0.1:5000", crawl_map=crawl, max_requests=10)
         self.assertTrue(any("SSRF" in f.title for f in result.findings))
         ssrf = next(f for f in result.findings if "SSRF" in f.title)
-        self.assertTrue(ssrf.owasp.startswith("A10"))
+        self.assertTrue(ssrf.owasp.startswith("A01:2025"))
 
     def test_rejects_non_local(self):
         with self.assertRaises(ValueError):

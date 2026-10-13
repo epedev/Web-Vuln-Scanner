@@ -62,7 +62,7 @@ def _finding(**kwargs: Any) -> Finding:
         confidence=Confidence.HIGH.value,
         verification_status=VerificationStatus.CONFIRMED.value,
         http_status=200,
-        owasp="A05:2021-Security Misconfiguration",
+        owasp="A02:2025-Security Misconfiguration",
         module="misconfig",
     )
     defaults.update(kwargs)
@@ -79,9 +79,9 @@ def _check_headers(url: str, headers: dict[str, str], scheme: str) -> list[Findi
             continue
         if name.lower() not in lower or not str(lower.get(name.lower(), "")).strip():
             owasp = (
-                "A02:2021-Cryptographic Failures"
+                "A04:2025-Cryptographic Failures"
                 if name.lower() == "strict-transport-security"
-                else "A05:2021-Security Misconfiguration"
+                else "A02:2025-Security Misconfiguration"
             )
             findings.append(
                 _finding(
@@ -139,7 +139,7 @@ def _check_cookies(url: str, set_cookie_values: list[str]) -> list[Finding]:
                 evidence={"cookie": name, "missing_attributes": missing, "raw": raw[:200]},
                 severity=Severity.MEDIUM.value if "HttpOnly" in missing else Severity.LOW.value,
                 cwe="CWE-614",
-                owasp="A07:2021-Identification and Authentication Failures",
+                owasp="A07:2025-Authentication Failures",
                 description=(
                     f"Cookie '{name}' was issued without recommended attributes: "
                     + ", ".join(missing)
@@ -205,7 +205,7 @@ def _check_csrf_forms(crawl_map: dict[str, Any] | None) -> list[Finding]:
                 severity=Severity.MEDIUM.value,
                 verification_status=VerificationStatus.CANDIDATE.value,
                 cwe="CWE-352",
-                owasp="A01:2021-Broken Access Control",
+                owasp="A01:2025-Broken Access Control",
                 description=(
                     "A state-changing form was discovered without a recognizable CSRF "
                     "token field. This is a candidate finding and may be a false positive "
@@ -315,7 +315,7 @@ def _check_open_redirect(
                     verification_status=VerificationStatus.PROBABLE.value,
                     http_status=resp.status_code,
                     cwe="CWE-601",
-                    owasp="A01:2021-Broken Access Control",
+                    owasp="A01:2025-Broken Access Control",
                     description=(
                         "A redirect parameter accepted an external URL and the response "
                         "Location header pointed outside the application origin."
@@ -356,7 +356,7 @@ def _check_tech_disclosure(url: str, headers: dict[str, str]) -> list[Finding]:
                 confidence=Confidence.HIGH.value,
                 verification_status=VerificationStatus.CONFIRMED.value,
                 cwe="CWE-200",
-                owasp="A06:2021-Vulnerable and Outdated Components",
+                owasp="A03:2025-Software Supply Chain Failures",
                 description=(
                     f"The response discloses component information through the "
                     f"{original} header ({value!s})."
@@ -405,7 +405,7 @@ def _check_cleartext_transport(base_url: str, crawl_map: dict[str, Any] | None) 
             confidence=Confidence.HIGH.value,
             verification_status=VerificationStatus.PROBABLE.value,
             cwe="CWE-319",
-            owasp="A02:2021-Cryptographic Failures",
+            owasp="A04:2025-Cryptographic Failures",
             description=(
                 "A password-bearing login form is reachable over unencrypted HTTP, "
                 "so credentials may be intercepted on the network path."
@@ -527,7 +527,7 @@ def _check_ssrf(
                 verification_status=VerificationStatus.CANDIDATE.value,
                 http_status=test.status_code,
                 cwe="CWE-918",
-                owasp="A10:2021-Server-Side Request Forgery (SSRF)",
+                owasp="A01:2025-Broken Access Control",
                 description=(
                     f"Parameter '{param}' accepted an attacker-controlled absolute URL and "
                     "the response showed signs of server-side fetch/error handling for that host."
@@ -542,6 +542,88 @@ def _check_ssrf(
                 ),
             )
         )
+    return findings
+
+
+
+
+def _check_verbose_errors(
+    client: requests.Session,
+    base_url: str,
+    *,
+    timeout: float,
+    budget: list[int],
+) -> list[Finding]:
+    """Probe for sensitive error/stack disclosure (OWASP A10:2025)."""
+    findings: list[Finding] = []
+    if budget[0] <= 0:
+        return findings
+    probe = base_url.rstrip("/") + "/vulnsight-exception-probe-%s" % "zz9"
+    try:
+        resp = client.get(probe, timeout=timeout, allow_redirects=True)
+        budget[0] -= 1
+    except requests.RequestException:
+        budget[0] -= 1
+        return findings
+    raw_text = getattr(resp, "text", "")
+    body = raw_text if isinstance(raw_text, str) else ""
+    status = getattr(resp, "status_code", 0)
+    try:
+        status_i = int(status)
+    except (TypeError, ValueError):
+        status_i = 0
+    signals = []
+    for marker in (
+        "Traceback (most recent call last)",
+        "Werkzeug Debugger",
+        "jinja2.exceptions",
+        "sqlalchemy.exc",
+        "NullPointerException",
+        "Stacktrace:",
+        "at java.",
+        "PHP Fatal error",
+        "Warning: include(",
+        "Django Version:",
+    ):
+        if marker in body:
+            signals.append(marker)
+    # Generic verbose 500 with long diagnostic body
+    if status_i >= 500 and len(body) > 800 and ("exception" in body.lower() or "error" in body.lower()):
+        signals.append("verbose_5xx_body")
+    if not signals:
+        return findings
+    findings.append(
+        _finding(
+            vulnerability_type="Exception Handling Failure",
+            title="Verbose error / stack information disclosure",
+            url=probe,
+            method="GET",
+            parameter="",
+            input_type="path",
+            context="Error handling / exceptional conditions",
+            payload_or_probe_id="exception-probe",
+            evidence={"status": status_i, "signals": signals, "body_excerpt": body[:240]},
+            detection_method="verbose_error_probe",
+            confidence=Confidence.MEDIUM.value,
+            severity=Severity.MEDIUM.value,
+            verification_status=VerificationStatus.PROBABLE.value,
+            http_status=status_i,
+            cwe="CWE-209",
+            owasp="A10:2025-Mishandling of Exceptional Conditions",
+            description=(
+                "A crafted request produced a response that appears to disclose "
+                "stack traces or detailed diagnostic error information."
+            ),
+            impact=(
+                "Sensitive error details help attackers map frameworks, paths, and "
+                "internal failures useful for further exploitation."
+            ),
+            remediation=(
+                "Return generic client errors; log details server-side only; disable "
+                "framework debug/diagnostic pages in production."
+            ),
+        )
+    )
     return findings
 
 
@@ -589,6 +671,9 @@ def check_local_target(
             result.findings.extend(
                 _check_ssrf(client, crawl_map, timeout=timeout, budget=budget)
             )
+            result.findings.extend(
+                _check_verbose_errors(client, base_url, timeout=timeout, budget=budget)
+            )
             requests_sent += max(0, max_requests - 1 - budget[0])
     except requests.RequestException as exc:
         result.errors.append(f"Misconfig probe failed: {exc}")
@@ -617,6 +702,6 @@ def check_local_target(
         "SSRF probes are candidate-level and use closed-port/error signals; validate manually."
     )
     result.limitations.append(
-        "OWASP A04/A08/A09 have limited or no dynamic coverage in VulnSight."
+        "OWASP A06/A08/A09 (2025) have limited or no dynamic coverage in VulnSight."
     )
     return result

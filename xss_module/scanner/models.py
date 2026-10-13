@@ -59,7 +59,7 @@ class Finding:
     remediation: str
     id: str = field(default_factory=lambda: str(uuid4()))
     cwe: str = "CWE-79"
-    owasp: str = "A03:2021-Injection"
+    owasp: str = "A05:2025-Injection"
     references: list[str] = field(default_factory=list)
     timestamp: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()

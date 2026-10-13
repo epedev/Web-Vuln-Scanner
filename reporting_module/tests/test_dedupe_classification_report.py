@@ -112,9 +112,11 @@ def test_distinct_missing_headers_not_merged():
 
 
 def test_cwe_owasp_validation():
-    ok = validate_classification("CWE-79", "A03:2021-Injection", "xss")
+    ok = validate_classification("CWE-79", "A05:2025-Injection", "xss")
     assert ok.cwe == "CWE-79"
-    assert ok.owasp.startswith("A03")
+    assert ok.owasp.startswith("A05:2025")
+    legacy = validate_classification("CWE-79", "A03:2021-Injection", "xss")
+    assert legacy.owasp == "A05:2025-Injection"
     bad = validate_classification("CWE-XX", "A99:2099", "xss")
     assert bad.errors
 

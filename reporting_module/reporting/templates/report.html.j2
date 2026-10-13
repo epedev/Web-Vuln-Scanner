@@ -238,7 +238,13 @@
 
     {% if summary.owasp_top10 %}
     <section id="owasp-top10">
-      <h2>OWASP Top 10:2021 coverage</h2>
+      <h2>OWASP Top 10:2025 coverage</h2>
+      <p class="muted">
+        {{ summary.owasp_top10.standard }}
+        {% if summary.owasp_top10.edition_window %}
+        · {{ summary.owasp_top10.edition_window }} cycle
+        {% endif %}
+      </p>
       <p class="muted">{{ summary.owasp_top10.note }}</p>
       <p>
         Categories with findings:
@@ -267,6 +273,30 @@
           {% endfor %}
         </tbody>
       </table>
+      {% if summary.owasp_top10.legacy_2021 %}
+      <h3>Legacy OWASP Top 10:2021 continuity</h3>
+      <p class="muted">{{ summary.owasp_top10.legacy_2021.note }}</p>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Category</th>
+            <th>Findings</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in summary.owasp_top10.legacy_2021.categories %}
+          <tr>
+            <td><code>{{ row.id }}</code></td>
+            <td>{{ row.name }}</td>
+            <td>{{ row.findings }}</td>
+            <td>{{ row.status.replace('_', ' ') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
     </section>
     {% endif %}
 

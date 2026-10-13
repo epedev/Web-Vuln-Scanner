@@ -114,7 +114,7 @@ def check_idor(
                         "exists."
                     ),
                     cwe="CWE-639",
-                    owasp="A01:2021-Broken Access Control",
+                    owasp="A01:2025-Broken Access Control",
                     module="access_control",
                 )
             )
@@ -194,7 +194,7 @@ def check_broken_access_control(
                     "before serving privileged routes, not just that a session exists."
                 ),
                 cwe="CWE-284",
-                owasp="A01:2021-Broken Access Control",
+                owasp="A01:2025-Broken Access Control",
                 module="access_control",
             )
         )
@@ -331,7 +331,7 @@ def check_unauthenticated_access(
                     "returning object-level profile data."
                 ),
                 cwe="CWE-639",
-                owasp="A01:2021-Broken Access Control",
+                owasp="A01:2025-Broken Access Control",
                 module="access_control",
             )
         )
@@ -376,7 +376,7 @@ def check_unauthenticated_access(
                         "administrative routes."
                     ),
                     cwe="CWE-284",
-                    owasp="A01:2021-Broken Access Control",
+                    owasp="A01:2025-Broken Access Control",
                     module="access_control",
                 )
             )

@@ -11,7 +11,7 @@ from xss.reflection import ReflectionKind
 
 REFERENCES = [
     "https://cwe.mitre.org/data/definitions/79.html",
-    "https://owasp.org/Top10/A03_2021-Injection/",
+    "https://owasp.org/Top10/2025/A05_2025-Injection/",
     "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html",
     "https://portswigger.net/web-security/cross-site-scripting",
     "https://owasp.org/www-project-web-security-testing-guide/",
