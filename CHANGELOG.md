@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0 — Academic hardening features
+
+- Add `misconfig_module` (security headers, cookie flags, CSRF form candidates, open redirect)
+- Add `vulnsight compare` for secure-vs-vulnerable baseline demos
+- Add `docs/THREAT_MODEL.md` and assessment-quality section in HTML reports
+- Include false-positive / residual-risk guidance in report limitations
+
 ## 0.1.8 — Submission presentation
 
 - Classic README, AUTHORS, and project summary for academic submission

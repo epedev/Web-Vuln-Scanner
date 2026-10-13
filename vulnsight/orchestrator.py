@@ -351,6 +351,52 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
             failed_modules.append("access_control")
             not_executed.append("access_control")
 
+
+    # --- Misconfiguration / hygiene ---
+    if not _enabled(cfg, "misconfig"):
+        module_runs.append(
+            ModuleRun("misconfig", MODULE_STATUS_SKIPPED, detail="disabled")
+        )
+        not_executed.append("misconfig")
+    else:
+        try:
+            from misconfig.detector import check_local_target as misconfig_check
+
+            result = misconfig_check(
+                target,
+                crawl_map=crawl_map,
+                timeout=cfg.timeout,
+                max_requests=min(20, cfg.max_requests),
+            )
+            findings = _finding_dicts(result)
+            all_findings.extend(findings)
+            _write_json(out / "findings_misconfig.json", result.to_dict())
+            status = MODULE_STATUS_WARNINGS if result.errors else MODULE_STATUS_COMPLETED
+            if result.errors and not findings:
+                status = MODULE_STATUS_FAILED
+                failed_any = True
+                failed_modules.append("misconfig")
+            module_runs.append(
+                ModuleRun(
+                    "misconfig",
+                    status,
+                    findings_count=len(findings),
+                    errors=list(result.errors),
+                )
+            )
+            if status != MODULE_STATUS_FAILED:
+                executed.append("misconfig")
+            else:
+                not_executed.append("misconfig")
+        except Exception as exc:  # noqa: BLE001
+            log.exception("misconfig failed")
+            module_runs.append(
+                ModuleRun("misconfig", MODULE_STATUS_FAILED, errors=[str(exc)])
+            )
+            failed_any = True
+            failed_modules.append("misconfig")
+            not_executed.append("misconfig")
+
     # Combined findings dump (pre-report)
     combined_path = out / "findings_raw.json"
     _write_json(
@@ -390,6 +436,10 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
                     "Failed modules (findings from other modules may still be valid): "
                     + ", ".join(failed_modules)
                 )
+            extra_limits.append(
+                "Assessment quality note: candidate/probable findings require analyst review; "
+                "absence of findings is not a security certification. See docs/THREAT_MODEL.md."
+            )
             report = run_report_module(
                 findings_objects=all_findings,
                 output_dir=str(out),

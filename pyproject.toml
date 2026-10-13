@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vulnsight"
-version = "0.1.8"
+version = "0.2.0"
 description = "Modular authorized web vulnerability scanner (CLI + reporting)"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -51,6 +51,7 @@ testpaths = [
   "reporting_module/tests",
   "sqli_&_command_module/tests",
   "access_control_module/tests",
+  "misconfig_module/tests",
 ]
 pythonpath = [
   ".",
@@ -59,6 +60,7 @@ pythonpath = [
   "reporting_module",
   "sqli_&_command_module",
   "access_control_module",
+  "misconfig_module",
 ]
 addopts = "-q"
 filterwarnings = [

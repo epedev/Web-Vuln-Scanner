@@ -285,6 +285,30 @@ def _cmd_scan(args: argparse.Namespace) -> int:
     return result.exit_code
 
 
+
+def _cmd_compare(args: argparse.Namespace) -> int:
+    """Compare current findings against a secure baseline (academic control)."""
+    ui = _console(args)
+    from vulnsight.compare import compare_findings, write_compare_report
+
+    ui.banner(subtitle="secure vs vulnerable comparison")
+    try:
+        result = compare_findings(args.current, args.baseline)
+        paths = write_compare_report(result, args.output)
+    except Exception as exc:  # noqa: BLE001
+        ui.status_fail(str(exc))
+        return 1
+    ui.status_ok(
+        f"new/regressed findings: {result['summary']['new_count']} "
+        f"(current={result['current_findings']}, baseline={result['baseline_findings']})"
+    )
+    for kind, path in paths.items():
+        ui.status_info(f"{kind}: {path}")
+    ui.status_info(result["summary"]["interpretation"])
+    ui.print()
+    return 0
+
+
 def _cmd_report(args: argparse.Namespace) -> int:
     ui = _console(args)
     ensure_module_paths()
@@ -428,6 +452,16 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--format", default="json,html,md,pdf", help="Report formats: json,html,md,pdf")
     s.add_argument("-v", "--verbose", action="store_true")
     s.set_defaults(func=_cmd_scan)
+
+    c = sub.add_parser(
+        "compare",
+        parents=[color_parent],
+        help="Compare current findings against a secure baseline (vulnerable vs secure demo)",
+    )
+    c.add_argument("--current", "-c", required=True, help="Current findings JSON")
+    c.add_argument("--baseline", "-b", required=True, help="Secure baseline findings JSON")
+    c.add_argument("--output", "-o", default="reports", help="Output directory")
+    c.set_defaults(func=_cmd_compare)
 
     r = sub.add_parser(
         "report", parents=[color_parent], help="Generate reports from findings JSON"

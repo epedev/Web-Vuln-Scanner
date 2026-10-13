@@ -11,6 +11,7 @@ flowchart LR
   Orch --> SQLi[sqli detector]
   Orch --> CMD[command_injection detector]
   Orch --> AC[access_control detector]
+  Orch --> Misc[misconfig hygiene]
   XSS --> Report[reporting_module]
   SQLi --> Report
   CMD --> Report
@@ -28,6 +29,7 @@ flowchart LR
 | 3 XSS | `xss_module/` | `run_xss_module(...)` | `ScanResult` + crawl map consumer |
 | 4 Auth/AC | `access_control_module/` | `check_local_target(base_url)` | Lab identities + `ScanResult` |
 | 5 Reporting | `reporting_module/` | `run_report_module(...)` | Canonical findings + HTML/JSON |
+| Hygiene | `misconfig_module/` | `check_local_target(base_url, crawl_map)` | Headers/CSRF/cookies/redirect |
 
 ## Shared models
 

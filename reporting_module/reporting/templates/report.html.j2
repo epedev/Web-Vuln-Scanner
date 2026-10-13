@@ -158,6 +158,7 @@
         <a href="#executive-summary">Summary</a> ·
         <a href="#findings-overview">Overview</a> ·
         <a href="#detailed-findings">Details</a> ·
+        <a href="#assessment-quality">Quality</a> ·
         <a href="#methodology">Limits</a>
       </div>
     </div>
@@ -323,6 +324,27 @@
       {% else %}
       <p class="muted">No detailed findings.</p>
       {% endfor %}
+    </section>
+
+    <section id="assessment-quality">
+      <h2>Assessment quality</h2>
+      <p class="muted">
+        Use this section for academic review of coverage honesty — not as a score of target security.
+      </p>
+      <div class="cards">
+        <div class="card"><div class="num">{{ modules_executed|length }}</div><div class="lbl">Modules executed</div></div>
+        <div class="card"><div class="num">{{ modules_not_executed|length }}</div><div class="lbl">Modules not executed</div></div>
+        <div class="card"><div class="num">{{ summary.by_verification_status.get('confirmed', 0) }}</div><div class="lbl">Confirmed</div></div>
+        <div class="card"><div class="num">{{ summary.by_verification_status.get('probable', 0) + summary.by_verification_status.get('candidate', 0) }}</div><div class="lbl">Needs review</div></div>
+      </div>
+      <h3>False-positive / false-negative guidance</h3>
+      <ul class="compact">
+        <li>Treat <strong>candidate</strong> and <strong>probable</strong> findings as hypotheses requiring validation.</li>
+        <li>CSRF form checks may false-positive when custom header-based CSRF defenses are used.</li>
+        <li>Missing security headers on the home page do not prove every route lacks them.</li>
+        <li>Zero findings is not a certification of security; coverage depends on crawl reach and module success.</li>
+      </ul>
+      <p class="muted">See repository document <code>docs/THREAT_MODEL.md</code> for assets, actors, and residual risk.</p>
     </section>
 
     <section id="methodology">

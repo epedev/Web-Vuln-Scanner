@@ -11,6 +11,7 @@ ALL_MODULES = (
     "sqli",
     "command_injection",
     "access_control",
+    "misconfig",
     "reporting",
 )
 

@@ -20,5 +20,6 @@ VulnSight is developed by **Group 3** as a collaborative graduation project.
 | Injection (SQLi / command) | `sqli_&_command_module/` |
 | XSS | `xss_module/` |
 | Access control | `access_control_module/` |
+| Security hygiene | `misconfig_module/` |
 | Reporting & scoring | `reporting_module/` |
 | CLI / orchestration | `vulnsight/` |

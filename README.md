@@ -5,7 +5,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-0f4c5c?style=flat-square)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-555555?style=flat-square)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-pytest-0f4c5c?style=flat-square)](tests/)
-[![Version](https://img.shields.io/badge/version-0.1.8-1faa9a?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.2.0-1faa9a?style=flat-square)](CHANGELOG.md)
 
 VulnSight integrates reconnaissance, injection detection, XSS analysis, access-control checks, and professional reporting into a single authorized-use CLI pipeline. It is designed as a modular graduation project: each detection area remains independently maintainable while sharing a common findings contract.
 
@@ -30,6 +30,9 @@ See also [AUTHORS.md](AUTHORS.md).
 - Project-file authorization (`init-project` / `scan --project`)
 - Same-origin crawler producing `crawl_map.json`
 - Detection modules: XSS, SQL injection, command injection, access control
+- Security hygiene module: headers, cookies, CSRF candidates, open redirect
+- Secure-vs-vulnerable comparison (`vulnsight compare`) for academic controls
+- Threat model + assessment-quality guidance in HTML reports
 - CVSS-aware reporting with HTML, Markdown, PDF, and JSON outputs
 - Lab-first scope defaults (loopback) with explicit opt-in for external targets
 - Interactive documentation site (`vulnsight docs`)
@@ -94,10 +97,21 @@ Authorized local scan against a prepared vulnerable target, with VulnSight produ
 
 ---
 
+## Secure vs vulnerable comparison
+
+```bash
+vulnsight compare \
+  --current reports/findings.json \
+  --baseline fixtures/secure_baseline_findings.json \
+  --output reports
+```
+
+---
+
 ## Architecture
 
 ```
-Authorize → Recon (crawl map) → Detect (XSS / SQLi / Cmd / Access) → Report
+Authorize → Recon → Detect (XSS / SQLi / Cmd / Access / Hygiene) → Report
 ```
 
 | Module | Path | Responsibility |
@@ -107,6 +121,7 @@ Authorize → Recon (crawl map) → Detect (XSS / SQLi / Cmd / Access) → Repor
 | XSS | `xss_module/` | Reflected and stored XSS |
 | Injection | `sqli_&_command_module/` | SQL injection and command injection |
 | Access control | `access_control_module/` | IDOR and broken access control |
+| Security hygiene | `misconfig_module/` | Headers, cookies, CSRF, open redirect |
 | Reporting | `reporting_module/` | Normalization, CVSS, HTML / MD / PDF / JSON |
 
 ---
@@ -121,6 +136,7 @@ Authorize → Recon (crawl map) → Detect (XSS / SQLi / Cmd / Access) → Repor
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Module contracts |
 | [docs/DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md) | Demonstration checklist |
 | [docs/SECURITY.md](docs/SECURITY.md) | Authorized-use policy |
+| [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) | Threat model & FP/FN guidance |
 | [AUTHORS.md](AUTHORS.md) | Project contributors |
 
 ---

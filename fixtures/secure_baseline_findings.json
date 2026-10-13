@@ -1,0 +1,5 @@
+{
+  "schema_version": "1.0",
+  "metadata": {"target": "secure-baseline", "note": "Expected empty/near-empty secure control"},
+  "findings": []
+}
