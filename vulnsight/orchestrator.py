@@ -455,7 +455,7 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
                 modules_not_executed=not_executed,
                 apply_cvss_suggestions=True,
                 extra_limitations=extra_limits,
-                mark_incomplete=bool(failed_modules or not_executed),
+                mark_incomplete=bool(failed_modules),
             )
             outputs = dict(getattr(report, "outputs", {}) or {})
             report_paths.update(outputs)
@@ -466,16 +466,25 @@ def run_scan(cfg: ScanConfig) -> OrchestratorResult:
                 alias.write_text(Path(src_json).read_text(encoding="utf-8"), encoding="utf-8")
                 report_paths["findings"] = str(alias)
             report_paths["findings_raw"] = str(combined_path)
+            report_findings = getattr(report, "findings", None) or []
+            if report_findings:
+                # Prefer canonical unique findings for UI totals.
+                normalized: list[dict] = []
+                for f in report_findings:
+                    d = f.to_dict() if hasattr(f, "to_dict") else dict(f)
+                    if not d.get("module") and d.get("source_module"):
+                        d["module"] = d["source_module"]
+                    normalized.append(d)
+                all_findings = normalized
+            artifact_kinds = [
+                k for k in ("html", "md", "pdf", "json", "findings") if k in report_paths
+            ]
             module_runs.append(
                 ModuleRun(
                     "reporting",
                     MODULE_STATUS_COMPLETED,
-                    findings_count=len(getattr(report, "findings", all_findings) or all_findings),
-                    detail=", ".join(
-                        f"{k}={v}"
-                        for k, v in report_paths.items()
-                        if k not in {"findings_raw"}
-                    ),
+                    findings_count=len(all_findings),
+                    detail="artifacts: " + ", ".join(artifact_kinds),
                 )
             )
             executed.append("reporting")

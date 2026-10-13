@@ -59,5 +59,5 @@ def test_partial_failure_preserves_other_findings(tmp_path):
     assert result.exit_code == 1
     assert result.incomplete is True
     assert any(r.name == "command_injection" and r.status == MODULE_STATUS_FAILED for r in result.module_runs)
-    assert any(f.get("module") == "sqli" for f in result.findings)
+    assert any((f.get("module") == "sqli" or f.get("source_module") == "sqli") for f in result.findings)
     assert (Path(result.output_dir) / "findings_raw.json").is_file()

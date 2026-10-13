@@ -51,6 +51,41 @@ class TestMisconfig(unittest.TestCase):
         result = check_local_target("http://127.0.0.1:5000", crawl_map=crawl)
         self.assertTrue(any("CSRF" in f.title for f in result.findings))
 
+    @patch("misconfig.detector.requests.Session")
+    def test_open_redirect_from_crawl_link(self, mock_session):
+        client = Mock()
+        mock_session.return_value.__enter__.return_value = client
+        home = Mock()
+        home.url = "http://127.0.0.1:5000/"
+        home.headers = {
+            "Content-Type": "text/html",
+            "Content-Security-Policy": "default-src 'self'",
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "Referrer-Policy": "no-referrer",
+        }
+        home.raw.headers.getlist = Mock(return_value=[])
+        redir = Mock()
+        redir.status_code = 302
+        redir.headers = {
+            "Location": "https://example.invalid/vulnsight-redirect-probe"
+        }
+        client.get.side_effect = [home, redir]
+
+        crawl = {
+            "forms": [],
+            "pages": [
+                {
+                    "url": "http://127.0.0.1:5000/",
+                    "params": [],
+                    "links": ["http://127.0.0.1:5000/go?next=/"],
+                }
+            ],
+            "endpoints": [],
+        }
+        result = check_local_target("http://127.0.0.1:5000", crawl_map=crawl)
+        self.assertTrue(any("Open redirect" in f.title for f in result.findings))
+
     def test_rejects_non_local(self):
         with self.assertRaises(ValueError):
             check_local_target("http://example.com")

@@ -230,6 +230,16 @@ def _check_open_redirect(
     seen: set[tuple[str, str]] = set()
 
     candidates: list[tuple[str, str]] = []
+
+    def _add_url(url: str) -> None:
+        if not url:
+            return
+        parsed = urlparse(url)
+        for name, _value in parse_qsl(parsed.query, keep_blank_values=True):
+            if name.lower() in REDIRECT_PARAMS:
+                # Probe using the URL without forcing a prior crawl visit.
+                candidates.append((url, name))
+
     for page in crawl_map.get("pages") or []:
         url = page.get("url") or ""
         for param in page.get("params") or []:
@@ -238,6 +248,8 @@ def _check_open_redirect(
             name = (param.get("name") or "").lower()
             if name in REDIRECT_PARAMS and url:
                 candidates.append((url, param.get("name") or name))
+        for link in page.get("links") or []:
+            _add_url(link)
     for endpoint in crawl_map.get("endpoints") or []:
         if not isinstance(endpoint, dict):
             continue
@@ -248,6 +260,7 @@ def _check_open_redirect(
             name = (param.get("name") or "").lower()
             if name in REDIRECT_PARAMS and url:
                 candidates.append((url, param.get("name") or name))
+            _add_url(url)
 
     for url, param in candidates:
         key = (url, param)
@@ -265,7 +278,13 @@ def _check_open_redirect(
             budget[0] -= 1
             continue
         location = resp.headers.get("Location", "")
-        if resp.status_code in {301, 302, 303, 307, 308} and external.rstrip("/") in location:
+        loc = location.strip()
+        external_hit = (
+            external.rstrip("/") in loc
+            or loc.rstrip("/") == external.rstrip("/")
+            or loc.startswith(external)
+        )
+        if resp.status_code in {301, 302, 303, 307, 308} and external_hit:
             findings.append(
                 _finding(
                     vulnerability_type="Open Redirect",
