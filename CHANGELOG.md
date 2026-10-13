@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.7 — PDF + Markdown report downloads
+
+- Write `vulnsight_report.md` and `vulnsight_report.pdf` by default with scans
+- HTML report includes Download buttons for PDF, Markdown, and JSON
+- PDF backends: WeasyPrint (package/CLI) with ReportLab fallback
+- Missing PDF tools no longer mark the whole assessment incomplete
+
 ## 0.1.6 — Crawl-map detection for BYO vulnerable labs
 
 - SQLi, command injection, and access control now use crawl-map discovery instead of only the removed training-lab routes

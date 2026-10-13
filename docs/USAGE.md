@@ -32,6 +32,8 @@ Artifacts:
 - `reports/findings_*.json` (per module)
 - `reports/findings.json` (normalized alias)
 - `reports/vulnsight_report.html`
+- `reports/vulnsight_report.md`
+- `reports/vulnsight_report.pdf`
 
 ## CLI reference
 

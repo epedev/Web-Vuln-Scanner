@@ -11,7 +11,8 @@ from reporting.deduplication import deduplicate
 from reporting.html_report import write_html
 from reporting.ingestion import load_json_file, load_json_object
 from reporting.normalization import normalize_bundle
-from reporting.pdf_report import weasyprint_available, write_pdf
+from reporting.markdown_report import write_markdown
+from reporting.pdf_report import pdf_backend_available, write_pdf
 from reporting.risk import apply_operational_priority, build_summary, sort_findings
 from reporting.schema import (
     SCHEMA_VERSION,
@@ -162,7 +163,7 @@ def generate_report(
     pdf: bool = False,
     **pipeline_kwargs: Any,
 ) -> ReportResult:
-    """Run pipeline and write HTML / JSON / optional PDF artifacts."""
+    """Run pipeline and write HTML / JSON / Markdown / PDF artifacts."""
     formats = formats or ["html"]
     result = run_report_pipeline(
         input_paths=input_paths,
@@ -188,15 +189,23 @@ def generate_report(
         html_path = write_html(result, out / "vulnsight_report.html")
         outputs["html"] = str(html_path)
 
+    if "md" in formats or "markdown" in formats:
+        md_path = write_markdown(result, out / "vulnsight_report.md")
+        outputs["md"] = str(md_path)
+
     if pdf or "pdf" in formats:
-        if not weasyprint_available():
+        if not pdf_backend_available():
             result.limitations.append(
-                "PDF requested but weasyprint is unavailable; HTML/JSON written only."
+                "PDF requested but no PDF backend is available "
+                "(install weasyprint or reportlab). HTML/JSON/Markdown still written."
             )
-            result.incomplete = True
+            # Do not mark the whole assessment incomplete solely for a missing PDF tool.
         else:
-            pdf_path = write_pdf(result, out / "vulnsight_report.pdf")
-            outputs["pdf"] = str(pdf_path)
+            try:
+                pdf_path = write_pdf(result, out / "vulnsight_report.pdf")
+                outputs["pdf"] = str(pdf_path)
+            except Exception as exc:  # noqa: BLE001
+                result.limitations.append(f"PDF generation failed: {exc}")
 
     result.outputs = outputs
     return result

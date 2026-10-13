@@ -15,7 +15,7 @@
   "output": "./reports",
   "allow_private_network": true,
   "allow_external": false,
-  "formats": ["json", "html"],
+  "formats": ["json", "html", "md", "pdf"],
   "crawl": {
     "max_pages": 40,
     "timeout": 10.0

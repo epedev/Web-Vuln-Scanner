@@ -49,7 +49,7 @@ class ProjectConfig:
     enable_stored_xss: bool = True
     enable_active_verify: bool = True
     enable_browser_verify: bool = False
-    formats: list[str] = field(default_factory=lambda: ["json", "html"])
+    formats: list[str] = field(default_factory=lambda: ["json", "html", "md", "pdf"])
     raw: dict[str, Any] = field(default_factory=dict)
 
     def to_scan_config(self, *, verbose: bool = False) -> ScanConfig:
@@ -198,7 +198,7 @@ def load_project_file(path: str | Path) -> ProjectConfig:
     if not isinstance(crawl, dict):
         raise ProjectError("'crawl' must be an object when provided")
 
-    formats = data.get("formats") or ["json", "html"]
+    formats = data.get("formats") or ["json", "html", "md", "pdf"]
     if isinstance(formats, str):
         formats = [f.strip() for f in formats.split(",") if f.strip()]
     if not isinstance(formats, list):
@@ -285,7 +285,7 @@ def default_project_template(
         "output": "./reports",
         "allow_private_network": True,
         "allow_external": False,
-        "formats": ["json", "html"],
+        "formats": ["json", "html", "md", "pdf"],
         "crawl": {"max_pages": 40, "timeout": 10.0},
         "max_requests": 200,
         "enable_stored_xss": True,

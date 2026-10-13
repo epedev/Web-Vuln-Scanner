@@ -77,7 +77,9 @@ vulnsight scan --project myproject.json
 
 Open:
 
-- `reports/vulnsight_report.html` — filterable findings UI
+- `reports/vulnsight_report.html` — filterable findings UI (Download PDF / Markdown)
+- `reports/vulnsight_report.md` — Markdown report
+- `reports/vulnsight_report.pdf` — PDF report
 - `reports/findings.json` — machine-readable output
 
 ---

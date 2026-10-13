@@ -7,17 +7,27 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from reporting.markdown_report import render_markdown
 from reporting.schema import CanonicalFinding, ReportResult
 
 TEMPLATE_DIR = Path(__file__).resolve().parent / "templates"
 
 
-def render_html(result: ReportResult) -> str:
+def render_html(
+    result: ReportResult,
+    *,
+    artifact_links: dict[str, str] | None = None,
+) -> str:
     env = Environment(
         loader=FileSystemLoader(str(TEMPLATE_DIR)),
         autoescape=select_autoescape(["html", "xml", "j2"]),
     )
     template = env.get_template("report.html.j2")
+    links = artifact_links or {
+        "md": "vulnsight_report.md",
+        "pdf": "vulnsight_report.pdf",
+        "json": "normalized_findings.json",
+    }
     return template.render(
         metadata=result.metadata,
         summary=result.summary,
@@ -27,6 +37,8 @@ def render_html(result: ReportResult) -> str:
         modules_not_executed=result.modules_not_executed,
         incomplete=result.incomplete,
         issues=[i.to_dict() for i in result.issues],
+        artifact_links=links,
+        markdown_source=render_markdown(result),
     )
 
 

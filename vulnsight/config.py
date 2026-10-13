@@ -30,6 +30,6 @@ class ScanConfig:
     enable_active_verify: bool = True
     enable_metachar_probes: bool = True
     enable_browser_verify: bool = False
-    formats: list[str] = field(default_factory=lambda: ["json", "html"])
+    formats: list[str] = field(default_factory=lambda: ["json", "html", "md", "pdf"])
     crawl_map_path: str | None = None
     skip_recon: bool = False

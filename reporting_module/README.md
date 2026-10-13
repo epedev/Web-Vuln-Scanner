@@ -30,7 +30,8 @@ Outputs:
 
 - `reports/vulnsight_report.html`
 - `reports/normalized_findings.json`
-- `reports/vulnsight_report.pdf` (with `--pdf` when WeasyPrint is available)
+- `reports/vulnsight_report.md`
+- `reports/vulnsight_report.pdf` (WeasyPrint or ReportLab)
 
 ## Programmatic API
 

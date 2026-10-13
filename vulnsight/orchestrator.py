@@ -74,7 +74,7 @@ class OrchestratorResult:
             )
         if self.report_paths:
             for kind, path in sorted(self.report_paths.items()):
-                if kind in {"json", "html", "findings", "pdf"}:
+                if kind in {"json", "html", "findings", "pdf", "md", "markdown"}:
                     lines.append(f"  report[{kind}]: {path}")
         return lines
 

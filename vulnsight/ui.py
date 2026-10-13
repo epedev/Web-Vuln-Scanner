@@ -264,7 +264,7 @@ class Console:
         self.print()
         self.print(t.bold(t.teal("  ARTIFACTS")))
         for kind, path in sorted(result.report_paths.items()):
-            if kind in {"json", "html", "findings", "pdf"}:
+            if kind in {"json", "html", "findings", "pdf", "md", "markdown"}:
                 self.print(f"  {t.amber('→')}  {t.slate(kind.ljust(8))} {path}")
 
         self.print()

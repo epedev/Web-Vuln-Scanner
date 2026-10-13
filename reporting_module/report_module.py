@@ -109,7 +109,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         description=(
             "VulnSight reporting & risk-scoring engine. Aggregates module findings, "
-            "scores CVSS v3.1, and writes HTML/JSON (optional PDF)."
+            "scores CVSS v3.1, and writes HTML/JSON/Markdown/PDF."
         )
     )
     p.add_argument("--xss", help="XSS module findings JSON")
@@ -124,11 +124,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--format",
         action="append",
-        choices=["html", "json", "pdf"],
+        choices=["html", "json", "pdf", "md", "markdown"],
         default=[],
         help="Output format (repeatable). Default: html+json",
     )
-    p.add_argument("--pdf", action="store_true", help="Also write PDF if WeasyPrint available")
+    p.add_argument("--pdf", action="store_true", help="Also write PDF (WeasyPrint or ReportLab)")
+    p.add_argument("--md", action="store_true", help="Also write Markdown report")
     p.add_argument("--output", "-o", default="reports", help="Output directory")
     p.add_argument("--target", default="unspecified")
     p.add_argument("--origin", default="unspecified", help="Authorized origin")
@@ -156,9 +157,11 @@ def main(argv: list[str] | None = None) -> int:
         print("error: provide at least one of --xss/--sqli/--misconfig/--input", file=sys.stderr)
         return 2
 
-    formats = list(args.format) if args.format else ["html", "json"]
+    formats = list(args.format) if args.format else ["html", "json", "md"]
     if args.pdf and "pdf" not in formats:
         formats.append("pdf")
+    if getattr(args, "md", False) and "md" not in formats:
+        formats.append("md")
 
     try:
         result = run_report_module(

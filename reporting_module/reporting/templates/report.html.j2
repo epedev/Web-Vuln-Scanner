@@ -129,6 +129,19 @@
       background: rgba(232,163,23,0.14); border-left: 4px solid var(--amber);
       color: #5c4300; padding: 0.75rem 0.9rem; margin-bottom: 1rem;
     }
+    .downloads {
+      display: flex; flex-wrap: wrap; gap: 0.55rem; align-items: center;
+      margin: 0 0 1rem; padding: 0.75rem 0.9rem;
+      background: rgba(255,255,255,0.88); border: 1px solid var(--line);
+    }
+    .downloads .label { color: var(--muted); font-size: 0.85rem; margin-right: 0.25rem; }
+    .dl-btn {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      border: 1px solid var(--line); background: #fff; color: var(--brand);
+      padding: 0.4rem 0.75rem; font-size: 0.85rem; font-weight: 650;
+      text-decoration: none; cursor: pointer;
+    }
+    .dl-btn:hover { border-color: var(--accent); color: var(--accent); }
     footer { color: var(--muted); font-size: 0.85rem; margin-top: 1rem; }
     @media print {
       .topnav, .toolbar { display: none !important; }
@@ -161,6 +174,16 @@
         <div><dt>Scanner version</dt><dd>{{ metadata.scanner_version }}</dd></div>
       </div>
     </header>
+
+    <div class="downloads" role="region" aria-label="Download report">
+      <span class="label">Download:</span>
+      <a class="dl-btn" href="{{ artifact_links.get('pdf', 'vulnsight_report.pdf') }}" download>PDF</a>
+      <a class="dl-btn" href="{{ artifact_links.get('md', 'vulnsight_report.md') }}" download>Markdown (.md)</a>
+      <button class="dl-btn" type="button" id="dl-md-inline">Markdown (this page)</button>
+      <a class="dl-btn" href="{{ artifact_links.get('json', 'normalized_findings.json') }}" download>JSON</a>
+      <a class="dl-btn" href="#findings-overview">Findings table</a>
+    </div>
+    <script type="application/json" id="md-source">{{ markdown_source|tojson }}</script>
 
     {% if incomplete %}
     <div class="notice" role="status">
@@ -389,6 +412,24 @@
         });
       });
       apply();
+
+      const mdBtn = document.getElementById('dl-md-inline');
+      const mdSrc = document.getElementById('md-source');
+      if (mdBtn && mdSrc) {
+        mdBtn.addEventListener('click', () => {
+          let md = '';
+          try { md = JSON.parse(mdSrc.textContent || '""'); } catch (e) { md = mdSrc.textContent || ''; }
+          const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'vulnsight_report.md';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        });
+      }
     })();
   </script>
 </body>

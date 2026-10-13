@@ -425,7 +425,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--marker-only", action="store_true", help="XSS marker-only mode")
     s.add_argument("--no-stored-xss", action="store_true")
     s.add_argument("--browser-verify", action="store_true", help="Optional Playwright XSS verify")
-    s.add_argument("--format", default="json,html", help="Report formats: json,html[,pdf]")
+    s.add_argument("--format", default="json,html,md,pdf", help="Report formats: json,html,md,pdf")
     s.add_argument("-v", "--verbose", action="store_true")
     s.set_defaults(func=_cmd_scan)
 
@@ -434,7 +434,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     r.add_argument("--input", "-i", required=True, help="findings.json or module ScanResult JSON")
     r.add_argument("--output", "-o", default="reports")
-    r.add_argument("--format", default="html,json")
+    r.add_argument("--format", default="json,html,md,pdf", help="Comma-separated: json,html,md,pdf")
     r.add_argument("--target", default="")
     r.add_argument("--origin", default="")
     r.set_defaults(func=_cmd_report)

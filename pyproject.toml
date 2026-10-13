@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vulnsight"
-version = "0.1.6"
-description = "Modular web vulnerability scanner with an integrated vulnerable Flask lab"
+version = "0.1.7"
+description = "Modular authorized web vulnerability scanner (CLI + reporting)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -30,6 +30,7 @@ browser = [
 ]
 pdf = [
   "weasyprint>=60.0",
+  "reportlab>=4.0.0",
 ]
 fastparse = [
   "lxml>=5.0.0",
