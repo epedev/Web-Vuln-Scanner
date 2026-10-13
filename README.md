@@ -9,6 +9,18 @@
 
 VulnSight integrates reconnaissance, injection detection, XSS analysis, access-control checks, and professional reporting into a single authorized-use CLI pipeline. It is designed as a modular graduation project: each detection area remains independently maintainable while sharing a common findings contract.
 
+**Group 3**
+
+| Student name | Student ID |
+|--------------|------------|
+| Kenean Amare Eshet | CTC-4837-26 |
+| Kenneti Hailu Dange | CTC-535-26 |
+| Kidsit Ephrem | CTC-6744-26 |
+| Alazar Elias Digafe | CTC-631-26 |
+| Firaol Mustefa Gossa | CTC-4301-26 |
+
+See also [AUTHORS.md](AUTHORS.md).
+
 > **Authorized use only.** Scan only systems you own or have written permission to test. This repository does **not** include a vulnerable target application—operators provide their own local website.
 
 ---
