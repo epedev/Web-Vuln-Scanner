@@ -37,6 +37,8 @@ OWASP_ALIASES = {
     "a08:2021": "A08:2021-Software and Data Integrity Failures",
     "a09:2021": "A09:2021-Security Logging and Monitoring Failures",
     "a10:2021": "A10:2021-Server-Side Request Forgery",
+    "a10:2021-server-side request forgery (ssrf)": "A10:2021-Server-Side Request Forgery",
+    "ssrf": "A10:2021-Server-Side Request Forgery",
 }
 
 # Common CWEs used by this project — offline allowlist, not live MITRE sync.
@@ -51,6 +53,10 @@ KNOWN_CWES = {
     "CWE-358",  # Improperly Implemented Security Check
     "CWE-614",  # Sensitive Cookie without Secure
     "CWE-942",  # Permissive Cross-domain Policy
+    "CWE-319",  # Cleartext Transmission of Sensitive Information
+    "CWE-352",  # CSRF
+    "CWE-601",  # Open Redirect
+    "CWE-918",  # SSRF
 }
 
 
@@ -136,6 +142,14 @@ def default_classification(vulnerability_type: str) -> tuple[str | None, str | N
         return "CWE-89", "A03:2021-Injection"
     if "command" in v:
         return "CWE-78", "A03:2021-Injection"
+    if "ssrf" in v or "server-side request" in v:
+        return "CWE-918", "A10:2021-Server-Side Request Forgery"
+    if "csrf" in v:
+        return "CWE-352", "A01:2021-Broken Access Control"
+    if "open redirect" in v:
+        return "CWE-601", "A01:2021-Broken Access Control"
+    if "cryptographic" in v or "cleartext" in v:
+        return "CWE-319", "A02:2021-Cryptographic Failures"
     if "misconfig" in v or "header" in v:
         return "CWE-693", "A05:2021-Security Misconfiguration"
     return None, None

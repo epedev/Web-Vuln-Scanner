@@ -121,7 +121,8 @@ Authorize → Recon → Detect (XSS / SQLi / Cmd / Access / Hygiene) → Report
 | XSS | `xss_module/` | Reflected and stored XSS |
 | Injection | `sqli_&_command_module/` | SQL injection and command injection |
 | Access control | `access_control_module/` | IDOR and broken access control |
-| Security hygiene | `misconfig_module/` | Headers, cookies, CSRF, open redirect |
+| Security hygiene | `misconfig_module/` | Headers, cookies, CSRF, open redirect, SSRF candidates, tech disclosure |
+| OWASP Top 10 | `reporting_module/` + `docs/OWASP_TOP10.md` | Per-category coverage table in HTML/MD reports |
 | Reporting | `reporting_module/` | Normalization, CVSS, HTML / MD / PDF / JSON |
 
 ---

@@ -37,6 +37,8 @@ CSRF_FIELD_HINTS = (
 )
 
 REDIRECT_PARAMS = ("next", "url", "redirect", "return", "return_url", "continue", "dest", "destination")
+SSRF_PARAMS = ("url", "uri", "fetch", "feed", "proxy", "target_url", "page_url", "webhook", "callback")
+DISCLOSURE_HEADERS = ("Server", "X-Powered-By", "X-AspNet-Version", "X-AspNetMvc-Version")
 
 
 def _validate_local_url(base_url: str) -> None:
@@ -76,6 +78,11 @@ def _check_headers(url: str, headers: dict[str, str], scheme: str) -> list[Findi
             # HSTS is not expected on plain HTTP lab targets.
             continue
         if name.lower() not in lower or not str(lower.get(name.lower(), "")).strip():
+            owasp = (
+                "A02:2021-Cryptographic Failures"
+                if name.lower() == "strict-transport-security"
+                else "A05:2021-Security Misconfiguration"
+            )
             findings.append(
                 _finding(
                     vulnerability_type="Security Misconfiguration",
@@ -86,6 +93,7 @@ def _check_headers(url: str, headers: dict[str, str], scheme: str) -> list[Findi
                     evidence={"missing_header": name},
                     severity=severity,
                     cwe=cwe,
+                    owasp=owasp,
                     description=(
                         f"The response from {url} does not include a {name} header. "
                         "Missing browser security controls increase impact of other flaws."
@@ -131,6 +139,7 @@ def _check_cookies(url: str, set_cookie_values: list[str]) -> list[Finding]:
                 evidence={"cookie": name, "missing_attributes": missing, "raw": raw[:200]},
                 severity=Severity.MEDIUM.value if "HttpOnly" in missing else Severity.LOW.value,
                 cwe="CWE-614",
+                owasp="A07:2021-Identification and Authentication Failures",
                 description=(
                     f"Cookie '{name}' was issued without recommended attributes: "
                     + ", ".join(missing)
@@ -324,6 +333,219 @@ def _check_open_redirect(
     return findings
 
 
+
+def _check_tech_disclosure(url: str, headers: dict[str, str]) -> list[Finding]:
+    findings: list[Finding] = []
+    lower = {k.lower(): (k, v) for k, v in headers.items()}
+    for name in DISCLOSURE_HEADERS:
+        hit = lower.get(name.lower())
+        if not hit:
+            continue
+        original, value = hit
+        if not str(value).strip():
+            continue
+        findings.append(
+            _finding(
+                vulnerability_type="Security Misconfiguration",
+                title=f"Technology disclosure via {original} header",
+                url=url,
+                method="GET",
+                parameter="",
+                evidence={"header": original, "value": str(value)[:160]},
+                severity=Severity.INFO.value,
+                confidence=Confidence.HIGH.value,
+                verification_status=VerificationStatus.CONFIRMED.value,
+                cwe="CWE-200",
+                owasp="A06:2021-Vulnerable and Outdated Components",
+                description=(
+                    f"The response discloses component information through the "
+                    f"{original} header ({value!s})."
+                ),
+                impact=(
+                    "Attackers can fingerprint the stack and prioritize known component "
+                    "weaknesses more quickly."
+                ),
+                remediation=(
+                    "Remove or generalize verbose server/framework headers in production."
+                ),
+            )
+        )
+    return findings
+
+
+def _check_cleartext_transport(base_url: str, crawl_map: dict[str, Any] | None) -> list[Finding]:
+    findings: list[Finding] = []
+    if urlparse(base_url).scheme != "http":
+        return findings
+    loginish = False
+    for form in (crawl_map or {}).get("forms") or []:
+        names = {
+            str(f.get("name") or "").lower()
+            for f in (form.get("fields") or form.get("inputs") or [])
+            if isinstance(f, dict)
+        }
+        if {"password", "pass"} & names:
+            loginish = True
+            break
+    if not loginish and "/login" in (base_url.lower() + str(crawl_map)):
+        loginish = True
+    if not loginish:
+        return findings
+    findings.append(
+        _finding(
+            vulnerability_type="Cryptographic Failure",
+            title="Login/password form served over cleartext HTTP",
+            url=base_url.rstrip("/") + "/login",
+            method="GET",
+            parameter="password",
+            input_type="form",
+            context="Transport security for authentication",
+            evidence={"scheme": "http", "note": "Lab/HTTP target exposes password form without TLS"},
+            severity=Severity.HIGH.value,
+            confidence=Confidence.HIGH.value,
+            verification_status=VerificationStatus.PROBABLE.value,
+            cwe="CWE-319",
+            owasp="A02:2021-Cryptographic Failures",
+            description=(
+                "A password-bearing login form is reachable over unencrypted HTTP, "
+                "so credentials may be intercepted on the network path."
+            ),
+            impact=(
+                "Credentials and session tokens can be captured by on-path attackers "
+                "when TLS is not used."
+            ),
+            remediation=(
+                "Serve authentication only over HTTPS and set Secure on session cookies."
+            ),
+        )
+    )
+    return findings
+
+
+def _iter_ssrf_candidates(crawl_map: dict[str, Any] | None) -> list[dict[str, str]]:
+    out: list[dict[str, str]] = []
+    seen: set[tuple[str, str, str]] = set()
+    if not crawl_map:
+        return out
+
+    def add(url: str, method: str, param: str) -> None:
+        key = (method.upper(), url, param)
+        if not url or not param or key in seen:
+            return
+        if param.lower() not in SSRF_PARAMS:
+            return
+        # Avoid double-counting pure open-redirect params already handled separately
+        # unless name is strongly SSRF-like.
+        seen.add(key)
+        out.append({"url": url, "method": method.upper(), "parameter": param})
+
+    for page in crawl_map.get("pages") or []:
+        url = page.get("url") or ""
+        for param in page.get("params") or []:
+            if isinstance(param, dict):
+                add(url, "GET", param.get("name") or "")
+        for link in page.get("links") or []:
+            parsed = urlparse(link)
+            for name, _ in parse_qsl(parsed.query, keep_blank_values=True):
+                add(link, "GET", name)
+    for form in crawl_map.get("forms") or []:
+        action = form.get("action") or form.get("url") or ""
+        method = (form.get("method") or "POST").upper()
+        for field in form.get("fields") or form.get("inputs") or []:
+            if isinstance(field, dict):
+                add(action, method, field.get("name") or "")
+    return out
+
+
+def _check_ssrf(
+    client: requests.Session,
+    crawl_map: dict[str, Any] | None,
+    *,
+    timeout: float,
+    budget: list[int],
+) -> list[Finding]:
+    findings: list[Finding] = []
+    marker_host = "127.0.0.1:9"
+    probe_target = f"http://{marker_host}/vulnsight-ssrf-probe"
+    for point in _iter_ssrf_candidates(crawl_map):
+        if budget[0] <= 0:
+            break
+        url, method, param = point["url"], point["method"], point["parameter"]
+        # Skip classic redirect-only param names unless strongly SSRF-named
+        if param.lower() in REDIRECT_PARAMS and param.lower() not in {"url", "uri"}:
+            continue
+        try:
+            if method == "GET":
+                parsed = urlparse(url)
+                pairs = [(k, v) for k, v in parse_qsl(parsed.query, keep_blank_values=True) if k != param]
+                pairs.append((param, probe_target))
+                probe_url = urlunparse(parsed._replace(query=urlencode(pairs)))
+                baseline = client.get(url, timeout=timeout, allow_redirects=False)
+                test = client.get(probe_url, timeout=timeout, allow_redirects=False)
+            else:
+                baseline = client.request(method, url, data={param: "http://127.0.0.1/"}, timeout=timeout, allow_redirects=False)
+                test = client.request(method, url, data={param: probe_target}, timeout=timeout, allow_redirects=False)
+            budget[0] -= 2
+        except requests.RequestException:
+            budget[0] -= 1
+            continue
+
+        body = (test.text or "")
+        signal = (
+            "vulnsight-ssrf-probe" in body
+            or "Connection refused" in body
+            or "Failed to connect" in body
+            or "Errno 111" in body
+            or marker_host in body
+            or (test.status_code >= 500 and baseline.status_code < 500)
+        )
+        if not signal:
+            # Still raise a low-confidence candidate when SSRF-like param accepts absolute URL without erroring immediately as validation failure
+            if test.status_code == 200 and len(body) != len(baseline.text or ""):
+                signal = True
+        if not signal:
+            continue
+        findings.append(
+            _finding(
+                vulnerability_type="Server-Side Request Forgery",
+                title=f"SSRF candidate via '{param}'",
+                url=url,
+                method=method,
+                parameter=param,
+                input_type="query" if method == "GET" else "form",
+                context="Server-side URL fetch parameter",
+                payload_or_probe_id="ssrf-closed-port-probe",
+                evidence={
+                    "probe_target": probe_target,
+                    "baseline_status": baseline.status_code,
+                    "test_status": test.status_code,
+                    "signal": True,
+                },
+                detection_method="ssrf_param_probe",
+                confidence=Confidence.MEDIUM.value,
+                severity=Severity.HIGH.value,
+                verification_status=VerificationStatus.CANDIDATE.value,
+                http_status=test.status_code,
+                cwe="CWE-918",
+                owasp="A10:2021-Server-Side Request Forgery (SSRF)",
+                description=(
+                    f"Parameter '{param}' accepted an attacker-controlled absolute URL and "
+                    "the response showed signs of server-side fetch/error handling for that host."
+                ),
+                impact=(
+                    "SSRF can expose internal services, cloud metadata endpoints, or port scan "
+                    "the internal network via the application server."
+                ),
+                remediation=(
+                    "Avoid passing user input into server-side HTTP clients; allowlist schemes "
+                    "and destinations; block link-local and loopback ranges."
+                ),
+            )
+        )
+    return findings
+
+
+
 def check_local_target(
     base_url: str,
     crawl_map: dict[str, Any] | None = None,
@@ -355,12 +577,17 @@ def check_local_target(
                 set_cookies = [resp.headers.get("Set-Cookie", "")]
 
             result.findings.extend(_check_headers(final_url, headers, urlparse(final_url).scheme))
+            result.findings.extend(_check_tech_disclosure(final_url, headers))
             result.findings.extend(_check_cookies(final_url, set_cookies))
+            result.findings.extend(_check_cleartext_transport(base_url, crawl_map))
             result.findings.extend(_check_csrf_forms(crawl_map))
             result.findings.extend(
                 _check_open_redirect(
                     client, base_url, crawl_map, timeout=timeout, budget=budget
                 )
+            )
+            result.findings.extend(
+                _check_ssrf(client, crawl_map, timeout=timeout, budget=budget)
             )
             requests_sent += max(0, max_requests - 1 - budget[0])
     except requests.RequestException as exc:
@@ -385,5 +612,11 @@ def check_local_target(
     )
     result.limitations.append(
         "HSTS is only evaluated for HTTPS responses; plain HTTP labs skip HSTS."
+    )
+    result.limitations.append(
+        "SSRF probes are candidate-level and use closed-port/error signals; validate manually."
+    )
+    result.limitations.append(
+        "OWASP A04/A08/A09 have limited or no dynamic coverage in VulnSight."
     )
     return result

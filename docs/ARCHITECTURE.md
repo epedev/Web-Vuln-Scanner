@@ -28,8 +28,8 @@ flowchart LR
 | 2 Injection | `sqli_&_command_module/` | `check_local_target(base_url)` | `ScanResult` / `Finding` |
 | 3 XSS | `xss_module/` | `run_xss_module(...)` | `ScanResult` + crawl map consumer |
 | 4 Auth/AC | `access_control_module/` | `check_local_target(base_url)` | Lab identities + `ScanResult` |
-| 5 Reporting | `reporting_module/` | `run_report_module(...)` | Canonical findings + HTML/JSON |
-| Hygiene | `misconfig_module/` | `check_local_target(base_url, crawl_map)` | Headers/CSRF/cookies/redirect |
+| 5 Reporting | `reporting_module/` | `run_report_module(...)` | Canonical findings + OWASP Top 10:2021 + HTML/JSON |
+| Hygiene | `misconfig_module/` | `check_local_target(base_url, crawl_map)` | Headers/CSRF/cookies/redirect/SSRF/disclosure |
 
 ## Shared models
 

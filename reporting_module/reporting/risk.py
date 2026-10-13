@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from reporting.owasp_top10 import build_owasp_coverage
 from reporting.schema import CanonicalFinding
 
 SEVERITY_RANK = {
@@ -104,6 +105,7 @@ def build_summary(findings: list[CanonicalFinding]) -> dict:
         "scored_findings": len(scores),
         "unscored_findings": sum(1 for f in findings if f.cvss_base_score is None),
         "major_observations": observations,
+        "owasp_top10": build_owasp_coverage(findings),
         "remediation_priorities": {
             "immediate": sum(1 for f in findings if f.operational_priority == "immediate"),
             "high": sum(1 for f in findings if f.operational_priority == "high"),

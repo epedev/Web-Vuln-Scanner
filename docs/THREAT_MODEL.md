@@ -16,11 +16,14 @@
 
 ## In-scope threats (detection goals)
 
-1. Injection: XSS, SQLi, command injection
-2. Broken access control / IDOR
-3. CSRF candidates on state-changing forms
-4. Security misconfiguration (headers, cookies)
-5. Open redirect candidates
+Mapped primarily to OWASP Top 10:2021 (see `docs/OWASP_TOP10.md`):
+
+1. Injection: XSS, SQLi, command injection (A03)
+2. Broken access control / IDOR, CSRF candidates, open redirect (A01)
+3. Cryptographic / transport hygiene: cleartext login, HSTS (A02)
+4. Security misconfiguration and tech disclosure signals (A05 / A06)
+5. Weak session cookie attributes (A07)
+6. SSRF candidates on URL-fetch parameters (A10)
 
 ## Out-of-scope threats
 

@@ -78,6 +78,39 @@ def render_markdown(result: ReportResult) -> str:
         lines.append("- No major observations.")
     lines.append("")
 
+    owasp = summary.get("owasp_top10") or {}
+    if owasp:
+        lines.append("## OWASP Top 10:2021 coverage")
+        lines.append("")
+        lines.append(f"**Standard:** {owasp.get('standard', 'OWASP Top 10:2021')}")
+        lines.append("")
+        lines.append(
+            f"Categories with findings: "
+            f"**{owasp.get('categories_with_findings', 0)}** / "
+            f"{owasp.get('categories_tracked', 10)}"
+        )
+        lines.append("")
+        if owasp.get("note"):
+            lines.append(f"> {_md_escape(str(owasp['note']))}")
+            lines.append("")
+        lines.append("| ID | Category | Findings | Status | VulnSight coverage |")
+        lines.append("| --- | --- | --- | --- | --- |")
+        for row in owasp.get("categories") or []:
+            lines.append(
+                "| "
+                + " | ".join(
+                    [
+                        row.get("id", ""),
+                        _md_escape(str(row.get("name", ""))),
+                        str(row.get("findings", 0)),
+                        str(row.get("status", "")).replace("_", " "),
+                        _md_escape(str(row.get("vulnsight_coverage", ""))),
+                    ]
+                )
+                + " |"
+            )
+        lines.append("")
+
     lines.append("## Findings overview")
     lines.append("")
     if result.findings:

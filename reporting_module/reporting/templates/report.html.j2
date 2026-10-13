@@ -156,6 +156,7 @@
       <div class="brand">VULNSIGHT REPORT</div>
       <div>
         <a href="#executive-summary">Summary</a> ·
+        <a href="#owasp-top10">OWASP Top 10</a> ·
         <a href="#findings-overview">Overview</a> ·
         <a href="#detailed-findings">Details</a> ·
         <a href="#assessment-quality">Quality</a> ·
@@ -234,6 +235,40 @@
       <p class="muted">Scope: {{ metadata.scope }}</p>
       <p class="muted">{{ metadata.purpose }}</p>
     </section>
+
+    {% if summary.owasp_top10 %}
+    <section id="owasp-top10">
+      <h2>OWASP Top 10:2021 coverage</h2>
+      <p class="muted">{{ summary.owasp_top10.note }}</p>
+      <p>
+        Categories with findings:
+        <strong>{{ summary.owasp_top10.categories_with_findings }}</strong>
+        / {{ summary.owasp_top10.categories_tracked }}
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Category</th>
+            <th>Findings</th>
+            <th>Status</th>
+            <th>VulnSight coverage</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in summary.owasp_top10.categories %}
+          <tr>
+            <td><code>{{ row.id }}</code></td>
+            <td>{{ row.name }}</td>
+            <td>{{ row.findings }}</td>
+            <td>{{ row.status.replace('_', ' ') }}</td>
+            <td class="muted">{{ row.vulnsight_coverage }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    {% endif %}
 
     <section id="findings-overview">
       <h2>Findings overview</h2>
