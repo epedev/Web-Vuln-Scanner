@@ -119,6 +119,7 @@ Authorize → Recon (crawl map) → Detect (XSS / SQLi / Cmd / Access) → Repor
 | [docs/USAGE.md](docs/USAGE.md) | CLI usage |
 | [docs/INSTALLATION.md](docs/INSTALLATION.md) | Setup notes |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Module contracts |
+| [docs/SYSTEM_DESIGN_PROPOSAL.md](docs/SYSTEM_DESIGN_PROPOSAL.md) | System design & project proposal |
 | [docs/DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md) | Demonstration checklist |
 | [docs/SECURITY.md](docs/SECURITY.md) | Authorized-use policy |
 | [AUTHORS.md](AUTHORS.md) | Project contributors |
