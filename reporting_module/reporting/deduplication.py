@@ -32,15 +32,50 @@ def vulnerability_class(vtype: str) -> str:
         return "xss.stored"
     if "reflected" in v and "xss" in v:
         return "xss.reflected"
-    if "xss" in v or "cross-site" in v:
+    # CSRF contains "cross-site" — classify before generic XSS.
+    if "csrf" in v or "request forgery" in v:
+        return "csrf"
+    if "open redirect" in v or v == "open redirect":
+        return "open_redirect"
+    if "ssrf" in v or "server-side request" in v:
+        return "ssrf"
+    if "cryptographic" in v or "cleartext" in v:
+        return "cryptographic_failure"
+    if "xss" in v or ("cross-site" in v and "script" in v):
         return "xss"
     if "sql" in v:
         return "sqli"
     if "command" in v:
         return "command_injection"
-    if "misconfig" in v or "header" in v:
+    if "idor" in v or "access control" in v:
+        return "access_control"
+    if "misconfig" in v or "header" in v or "disclosure" in v:
         return "misconfiguration"
     return v
+
+
+def _issue_distinguisher(finding: CanonicalFinding) -> str:
+    """Keep distinct issues that share URL/parameter (e.g. different missing headers)."""
+    ev = finding.evidence if isinstance(finding.evidence, dict) else {}
+    for key in (
+        "missing_header",
+        "header",
+        "cookie",
+        "probe_url",
+        "probe_target",
+        "missing_attributes",
+    ):
+        val = ev.get(key)
+        if val is None or val == "":
+            continue
+        if isinstance(val, (list, tuple)):
+            return f"{key}={','.join(str(x) for x in val)}".lower()
+        return f"{key}={val}".lower()
+    # Title separates same-class hygiene findings when evidence lacks a stable key.
+    title = (finding.title or "").strip().lower()
+    if title:
+        return f"title={title}"
+    return ""
 
 
 def make_dedupe_key(finding: CanonicalFinding) -> str:
@@ -51,6 +86,7 @@ def make_dedupe_key(finding: CanonicalFinding) -> str:
             base_url(finding.url),
             (finding.parameter or "").lower(),
             (finding.location or "").lower(),
+            _issue_distinguisher(finding),
         ]
     )
 

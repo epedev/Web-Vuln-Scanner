@@ -57,6 +57,8 @@ KNOWN_CWES = {
     "CWE-352",  # CSRF
     "CWE-601",  # Open Redirect
     "CWE-918",  # SSRF
+    "CWE-639",  # Authorization Bypass Through User-Controlled Key (IDOR)
+    "CWE-284",  # Improper Access Control
 }
 
 
@@ -125,9 +127,16 @@ def validate_classification(
         warnings.append("CWE-79 usually maps to OWASP A03:2021 Injection")
     if cwe_n == "CWE-89" and owasp_n and not owasp_n.startswith("A03"):
         warnings.append("CWE-89 usually maps to OWASP A03:2021 Injection")
-    if "misconfig" in vtype and owasp_n and not owasp_n.startswith("A05"):
+    # Hygiene module emits several legitimate Top 10 mappings beyond A05.
+    allowed_misconfig_owasp = ("A01", "A02", "A05", "A06", "A07", "A10")
+    if (
+        "misconfig" in vtype
+        and owasp_n
+        and not any(owasp_n.startswith(prefix) for prefix in allowed_misconfig_owasp)
+    ):
         warnings.append(
-            "Misconfiguration findings commonly map to OWASP A05:2021"
+            "Misconfiguration findings commonly map to OWASP A05:2021 "
+            "(or A01/A02/A06/A07/A10 for related hygiene checks)"
         )
     return ClassificationResult(
         cwe=cwe_n, owasp=owasp_n, warnings=warnings, errors=errors

@@ -72,6 +72,45 @@ def test_different_vuln_classes_same_url_not_merged():
     assert len(out) == 2
 
 
+def test_csrf_not_classified_as_xss():
+    from reporting.deduplication import vulnerability_class
+
+    assert vulnerability_class("Cross-Site Request Forgery") == "csrf"
+    assert vulnerability_class("Cross-Site Scripting") == "xss"
+
+
+def test_distinct_missing_headers_not_merged():
+    out = deduplicate(
+        [
+            _f(
+                title="Missing Content-Security-Policy header",
+                vulnerability_type="Security Misconfiguration",
+                source_module="misconfig",
+                parameter="",
+                location="HTTP response hygiene",
+                evidence={"missing_header": "Content-Security-Policy"},
+            ),
+            _f(
+                title="Missing X-Frame-Options header",
+                vulnerability_type="Security Misconfiguration",
+                source_module="misconfig",
+                parameter="",
+                location="HTTP response hygiene",
+                evidence={"missing_header": "X-Frame-Options"},
+            ),
+            _f(
+                title="Technology disclosure via Server header",
+                vulnerability_type="Security Misconfiguration",
+                source_module="misconfig",
+                parameter="",
+                location="HTTP response hygiene",
+                evidence={"header": "Server", "value": "Werkzeug"},
+            ),
+        ]
+    )
+    assert len(out) == 3
+
+
 def test_cwe_owasp_validation():
     ok = validate_classification("CWE-79", "A03:2021-Injection", "xss")
     assert ok.cwe == "CWE-79"
