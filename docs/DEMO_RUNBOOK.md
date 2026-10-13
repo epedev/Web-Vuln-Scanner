@@ -70,3 +70,14 @@ For each class your prepared site demonstrates (XSS, SQLi, command injection, ID
 | Connection errors | Confirm your lab is listening on the project target URL |
 | Scope error | Use `http://127.0.0.1:...` or authorize private hosts in the project file |
 | Missing vulnsight | Activate venv; `pip install -e ".[dev]"` |
+
+## Reference screenshots
+
+Demo captures from an authorized local assessment:
+
+![Scan terminals](images/demo-scan-terminals.png)
+
+![Report summary](images/demo-report-summary.png)
+
+![Findings overview](images/demo-report-findings.png)
+

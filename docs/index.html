@@ -156,6 +156,10 @@
       padding: 0.9rem 1rem;
       color: #5c4300;
     }
+    .shots { display: grid; gap: 1rem; }
+    .shots figure { margin: 0; border: 1px solid var(--line); background: #fff; padding: 0.55rem; }
+    .shots img { width: 100%; height: auto; display: block; }
+    .shots figcaption { font-size: 0.85rem; color: #5b737c; margin-top: 0.45rem; }
     footer {
       margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line);
       color: #5b737c; font-size: 0.88rem;
@@ -178,6 +182,7 @@
         <a href="#modules">Modules</a>
         <a href="#team">Group 3</a>
         <a href="#try">Try it</a>
+        <a href="#demo">Demo</a>
         <a href="PROJECT.md">Project</a>
         <a href="USAGE.md">Usage</a>
         <a href="SECURITY.md">Security</a>
@@ -273,6 +278,26 @@
       </p>
     </section>
 
+
+
+    <section class="section" id="demo">
+      <h2>Project demonstration</h2>
+      <p class="lead">Authorized local scan and generated assessment report.</p>
+      <div class="shots">
+        <figure>
+          <img src="images/demo-scan-terminals.png" alt="VulnSight scan running beside the local target application">
+          <figcaption>Full scan against an authorized local target</figcaption>
+        </figure>
+        <figure>
+          <img src="images/demo-report-summary.png" alt="VulnSight HTML report executive summary">
+          <figcaption>Executive summary in the HTML report</figcaption>
+        </figure>
+        <figure>
+          <img src="images/demo-report-findings.png" alt="VulnSight findings overview table">
+          <figcaption>Findings overview with severity filters</figcaption>
+        </figure>
+      </div>
+    </section>
 
     <section class="section" id="team">
       <h2>Group 3</h2>

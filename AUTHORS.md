@@ -12,15 +12,6 @@ VulnSight is developed by **Group 3** as a collaborative graduation project.
 | Alazar Elias Digafe | CTC-631-26 |
 | Firaol Mustefa Gossa | CTC-4301-26 |
 
-## Repository collaborators (GitHub)
-
-| GitHub | Role on repository |
-|--------|--------------------|
-| [epedev](https://github.com/epedev) | Owner / administrator |
-| [Kenacoder](https://github.com/Kenacoder) | Collaborator |
-| [keneanamare](https://github.com/keneanamare) | Collaborator |
-| [kidist-27](https://github.com/kidist-27) | Collaborator |
-
 ## Module ownership (project design)
 
 | Area | Path |
@@ -31,5 +22,3 @@ VulnSight is developed by **Group 3** as a collaborative graduation project.
 | Access control | `access_control_module/` |
 | Reporting & scoring | `reporting_module/` |
 | CLI / orchestration | `vulnsight/` |
-
-Contribution history is available in GitHub **Insights → Contributors**.

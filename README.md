@@ -82,6 +82,18 @@ Reports are written under `reports/`:
 
 ---
 
+## Project demonstration
+
+Authorized local scan against a prepared vulnerable target, with VulnSight producing an assessment report.
+
+![VulnSight scan alongside the local target application](docs/images/demo-scan-terminals.png)
+
+![HTML report executive summary](docs/images/demo-report-summary.png)
+
+![Findings overview with severity filters](docs/images/demo-report-findings.png)
+
+---
+
 ## Architecture
 
 ```
