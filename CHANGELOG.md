@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.8 — Submission presentation
+
+- Classic README, AUTHORS, and project summary for academic submission
+- Pull-request template and submission docs
+- Cleaner documentation landing page tone
+
 ## 0.1.7 — PDF + Markdown report downloads
 
 - Write `vulnsight_report.md` and `vulnsight_report.pdf` by default with scans

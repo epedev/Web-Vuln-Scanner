@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>VulnSight — See the weakness. Prove the risk.</title>
+  <title>VulnSight — Authorized Web Vulnerability Scanner</title>
   <style>
     :root {
       --ink: #0c1b22;
@@ -70,8 +70,8 @@
       animation: pulse 6s ease-in-out infinite;
       pointer-events: none;
     }
-    @keyframes drift { from { transform: translateY(0); } to { transform: translateY(-24px); } }
-    @keyframes pulse { 0%,100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.08); opacity: 0.9; } }
+    @keyframes drift { from { transform: none; } to { transform: none; } }
+    @keyframes pulse { 0%,100% { opacity: 0.55; } 50% { opacity: 0.55; } }
     .hero-kicker {
       position: relative; z-index: 1;
       font-family: "IBM Plex Mono", monospace;
@@ -177,6 +177,7 @@
         <a href="#flow">Flow</a>
         <a href="#modules">Modules</a>
         <a href="#try">Try it</a>
+        <a href="PROJECT.md">Project</a>
         <a href="USAGE.md">Usage</a>
         <a href="SECURITY.md">Security</a>
         <a href="https://github.com/epedev/Web-Vuln-Scanner">GitHub</a>
@@ -184,11 +185,12 @@
     </nav>
 
     <header class="hero">
-      <div class="hero-kicker">authorized web vulnerability scanner</div>
-      <h1>See the weakness.</h1>
+      <div class="hero-kicker">graduation project · authorized assessment tool</div>
+      <h1>VulnSight</h1>
       <p>
-        Modular CLI scanner for authorized local websites — recon, injection, XSS,
-        access control, and report generation in one interactive pipeline.
+        A modular CLI web vulnerability scanner for authorized local assessments:
+        reconnaissance, XSS, SQL injection, command injection, access control,
+        and professional HTML, Markdown, and PDF reporting.
       </p>
       <div class="cta-row">
         <a class="btn btn-primary" href="#try">Start scanning</a>
@@ -276,7 +278,7 @@
     </div>
 
     <footer>
-      <span>VulnSight · see the weakness · prove the risk · secure the web</span>
+      <span>VulnSight · authorized modular web vulnerability scanner</span>
       <span><a href="../LICENSE">MIT License</a> · <a href="https://github.com/epedev/Web-Vuln-Scanner">epedev/Web-Vuln-Scanner</a></span>
     </footer>
   </div>
