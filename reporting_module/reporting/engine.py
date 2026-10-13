@@ -185,27 +185,39 @@ def generate_report(
             raise OSError("normalized JSON was empty")
         outputs["json"] = str(json_path)
 
-    if "html" in formats:
-        html_path = write_html(result, out / "vulnsight_report.html")
-        outputs["html"] = str(html_path)
-
+    # Write downloadable artifacts before HTML so sibling links resolve.
     if "md" in formats or "markdown" in formats:
         md_path = write_markdown(result, out / "vulnsight_report.md")
         outputs["md"] = str(md_path)
 
+    pdf_available = False
     if pdf or "pdf" in formats:
         if not pdf_backend_available():
             result.limitations.append(
                 "PDF requested but no PDF backend is available "
                 "(install weasyprint or reportlab). HTML/JSON/Markdown still written."
             )
-            # Do not mark the whole assessment incomplete solely for a missing PDF tool.
         else:
             try:
                 pdf_path = write_pdf(result, out / "vulnsight_report.pdf")
                 outputs["pdf"] = str(pdf_path)
+                pdf_available = True
             except Exception as exc:  # noqa: BLE001
                 result.limitations.append(f"PDF generation failed: {exc}")
+
+    if "html" in formats:
+        artifact_links = {
+            "md": "vulnsight_report.md",
+            "pdf": "vulnsight_report.pdf",
+            "json": "normalized_findings.json",
+            "pdf_available": bool(
+                pdf_available or (out / "vulnsight_report.pdf").exists()
+            ),
+        }
+        html_path = write_html(
+            result, out / "vulnsight_report.html", artifact_links=artifact_links
+        )
+        outputs["html"] = str(html_path)
 
     result.outputs = outputs
     return result

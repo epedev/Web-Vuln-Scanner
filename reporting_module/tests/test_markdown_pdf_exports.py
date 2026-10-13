@@ -59,6 +59,13 @@ def test_html_contains_download_controls(tmp_path):
     assert "vulnsight_report.md" in html
     assert "vulnsight_report.pdf" in html
     assert "dl-md-inline" in html
+    assert "dl-md-file" in html
+    assert "dl-pdf" in html
+    assert 'id="methodology"' not in html
+    assert "Methodology and limitations" not in html
+    assert "#methodology" not in html
+    md = Path(result.outputs["md"]).read_text(encoding="utf-8")
+    assert "Methodology and limitations" not in md
 
 
 def test_pdf_when_backend_available(tmp_path):
