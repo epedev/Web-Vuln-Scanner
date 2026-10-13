@@ -41,7 +41,3 @@ VulnSight demonstrates a complete, ethically constrained scanning pipeline suita
 - Bundled deliberately vulnerable target application
 - Unauthorized or external scanning without explicit operator consent
 - Guaranteed complete coverage of all vulnerability classes
-
-## Design proposal
-
-See [SYSTEM_DESIGN_PROPOSAL.md](SYSTEM_DESIGN_PROPOSAL.md) for the full system design and functional explanation.
